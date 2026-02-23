@@ -24,8 +24,8 @@ export async function generateMetadata({
         },
         description: `Manage your membership, attendance, and bookings at ${gymName}.`,
         robots: {
-            index: false,
-            follow: false,
+            index: true,
+            follow: true,
         },
     };
 }

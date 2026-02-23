@@ -1,14 +1,19 @@
-import { getMemberPaymentHistoryDetails } from "@/features/members/new/queries";
+"use client";
 import { ColumnDef } from "@tanstack/react-table";
+import { getMemberPaymentHistoryDetails } from "../billing-queries";
+import { formatDate } from "@/shared/lib/utils";
 
-type PaymentHistoryColumnProps = Awaited<
+type PaymentHistoryRecord = Awaited<
     ReturnType<typeof getMemberPaymentHistoryDetails>
->[number];
+>["records"][number];
 
-export const PAYMENT_HISTORY_COLUMS: ColumnDef<PaymentHistoryColumnProps>[] = [
+export const PAYMENT_HISTORY_COLUMS: ColumnDef<PaymentHistoryRecord>[] = [
     {
         accessorKey: "date",
         header: "DATE",
+        cell: ({ getValue }) => {
+            return formatDate(getValue() as Date);
+        },
     },
     {
         accessorKey: "amount",

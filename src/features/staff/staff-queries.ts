@@ -6,29 +6,27 @@ import { cache } from "react";
 
 export const getStaffStatsAndTableData = cache(async () => {
     try {
-        const currentMember = await requirePermissionAndReturnUser("staff", [
+        const currentStaff = await requirePermissionAndReturnUser("staff", [
             "read",
         ]);
         const staff = await prisma.gymMember.findMany({
             where: {
-                gymId: currentMember.organizationId,
-                role: {
-                    in: ["admin", "trainer"],
-                },
+                gymId: currentStaff.organizationId,
+                isActive: true,
+                role: "trainer",
             },
             select: {
                 id: true,
+                role: true,
                 isActive: true,
                 joinedOn: true,
-                role: true,
-                memberDetails: {
+                user: {
                     select: {
                         id: true,
-                        firstName: true,
-                        gender: true,
-                        lastName: true,
+                        name: true,
                         image: true,
                         email: true,
+                        createdAt: true,
                         phone: true,
                     },
                 },
@@ -45,15 +43,43 @@ export const getStaffStatsAndTableData = cache(async () => {
             isActive: staff.isActive,
             joinedOn: staff.joinedOn,
             role: staff.role,
-            image: staff?.memberDetails?.image,
-            email: staff?.memberDetails?.email,
-            phone: staff?.memberDetails?.phone,
-            firstName: staff?.memberDetails?.firstName,
-            lastName: staff?.memberDetails?.lastName,
-            memberDetailsId: staff?.memberDetails?.id,
-            gender: staff?.memberDetails?.gender,
+            image: staff.user.image,
+            email: staff.user.email || "Unknown",
+            phone: staff.user.phone || "Unknown",
+            name: staff.user.name || "Unknown",
+            memberDetailsId: staff.user.id,
+            userId: staff.user.id,
         }));
         return { stats, records };
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+});
+
+export const getTrainersList = cache(async () => {
+    try {
+        const currentStaff = await requirePermissionAndReturnUser("staff", [
+            "read",
+        ]);
+        return await prisma.gymMember.findMany({
+            where: {
+                gymId: currentStaff.organizationId,
+                isActive: true,
+                role: "trainer",
+            },
+            select: {
+                id: true,
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        image: true,
+                        createdAt: true,
+                    },
+                },
+            },
+        });
     } catch (error) {
         console.error(error);
         throw error;

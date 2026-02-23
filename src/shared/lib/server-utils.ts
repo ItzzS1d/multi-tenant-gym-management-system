@@ -1,8 +1,10 @@
 "server-only";
 
 import { headers } from "next/headers";
-import { type AuditLog, Prisma, PrismaClient } from "../../../prisma/generated/prisma/client";
+import { Prisma, PrismaClient } from "../../../prisma/generated/prisma/client";
 import prisma from "../config/prisma.config";
+import { protocol } from "./utils";
+import { Route } from "next";
 
 export const ALL_EMAIL_DOMAINS = [
     "@gmail.com",
@@ -24,9 +26,8 @@ export async function getAuditMetadata() {
 export function createAuditLog(
     auditLog: Omit<Prisma.AuditLogCreateInput, "ipAddress" | "userAgent">,
     db: Prisma.TransactionClient | PrismaClient,
-    metadata: Awaited<ReturnType<typeof getAuditMetadata>>
+    metadata: Awaited<ReturnType<typeof getAuditMetadata>>,
 ) {
-
     return db.auditLog.create({
         data: {
             ...auditLog,
@@ -70,3 +71,12 @@ export function VALID_DOMAIN() {
 
     return validDomains;
 }
+
+export const rootDomain =
+    process.env.NODE_ENV === "development"
+        ? `${process.env.BETTER_AUTH_DOMAIN}:3000`
+        : process.env.BETTER_AUTH_DOMAIN!;
+export const rootDomainWithProtocol = `${protocol}://${rootDomain}`;
+export const constructUrl = (pathName: string, subDomain: string) => {
+    return `${protocol}://${subDomain}.${rootDomain}${pathName}` as Route;
+};

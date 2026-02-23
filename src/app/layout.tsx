@@ -37,9 +37,9 @@ export default async function RootLayout({
                 className={`${roboto.variable} font-roboto  antialiased h-svh `}
             >
                 <NextTopLoader
-                    color="#0969da"
+                    color="#16eb5a"
                     showSpinner={false}
-                    height={2.4}
+                    height={3.8}
                 />
                 <Toaster position="top-right" richColors />
                 <FlashToast flash={flash} />

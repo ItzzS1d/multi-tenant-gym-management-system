@@ -2,18 +2,25 @@
 
 import { SIDEBAR_LINKS } from "@/shared/constants/sidebarLinks";
 import { usePathname, useRouter } from "next/navigation";
-import Link from "next/link";
 import { useEffect } from "react";
 import { useTopLoader } from "nextjs-toploader";
-import { cn } from "@/shared/lib/utils";
-import { ROLE } from "../../../../prisma/generated/prisma/enums";
 import {
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
 } from "@/shared/components/ui/sidebar";
 import { Route } from "next";
+import { Role } from "../../../../prisma/generated/prisma/enums";
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/shared/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 
-const SidebarItems = ({ role }: { role: ROLE }) => {
+const SidebarItems = ({ role }: { role: Role }) => {
     const pathname = usePathname();
     const router = useRouter();
     const loader = useTopLoader();
@@ -84,26 +91,84 @@ const SidebarItems = ({ role }: { role: ROLE }) => {
     const visibleLinks = SIDEBAR_LINKS.filter((link) =>
         link.allowedRoles.includes(role),
     );
+
     return (
         <>
             {visibleLinks.map((item, i) => {
+                const isParentActive =
+                    pathname === item.href ||
+                    pathname.startsWith(`${item.href}/`);
+
                 const isActive =
                     pathname === item.href ||
                     pathname.startsWith(`${item.href}/`);
 
+                if (item.subMenus?.length) {
+                    return (
+                        <Collapsible key={i} defaultOpen={isParentActive}>
+                            <SidebarMenuItem>
+                                <CollapsibleTrigger
+                                    render={
+                                        <SidebarMenuButton
+                                            tooltip={item.title}
+                                            className="justify-between"
+                                        >
+                                            <div className="flex items-center gap-2 ">
+                                                <item.icon />
+                                                <span>{item.title}</span>
+                                            </div>
+
+                                            <ChevronDown className="transition-transform group-data-[state=open]:rotate-180" />
+                                        </SidebarMenuButton>
+                                    }
+                                />
+
+                                <CollapsibleContent>
+                                    <SidebarMenuSub>
+                                        {item.subMenus.map((sub, j) => {
+                                            const isChildActive =
+                                                pathname === sub.href ||
+                                                pathname.startsWith(
+                                                    `${sub.href}/`,
+                                                );
+
+                                            return (
+                                                <SidebarMenuSubItem key={j}>
+                                                    <SidebarMenuSubButton
+                                                        isActive={isChildActive}
+                                                        onClick={() => {
+                                                            loader.start();
+                                                            router.push(
+                                                                sub.href as Route,
+                                                            );
+                                                        }}
+                                                        className="cursor-pointer "
+                                                    >
+                                                        <sub.icon />
+                                                        <span>{sub.title}</span>
+                                                    </SidebarMenuSubButton>
+                                                </SidebarMenuSubItem>
+                                            );
+                                        })}
+                                    </SidebarMenuSub>
+                                </CollapsibleContent>
+                            </SidebarMenuItem>
+                        </Collapsible>
+                    );
+                }
+
                 return (
                     <SidebarMenuItem key={i}>
-                        <SidebarMenuButton tooltip={item.title}>
-                            <Link
-                                href={item.href as Route}
-                                className={cn(
-                                    "flex items-center gap-1 ",
-                                    isActive && "text-white bg-primary",
-                                )}
-                            >
-                                <item.icon aria-hidden />
-                                <span>{item.title}</span>
-                            </Link>
+                        <SidebarMenuButton
+                            tooltip={item.title}
+                            isActive={isActive}
+                            onClick={() => {
+                                loader.start();
+                                router.push(item.href as Route);
+                            }}
+                        >
+                            <item.icon aria-hidden />
+                            <span>{item.title}</span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 );

@@ -131,7 +131,8 @@
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
     -webkit-appearance: none;
-    margin: 0; /* Removes the margin in older versions of Chrome */
+    margin: 0;
+    /* Removes the margin in older versions of Chrome */
 }
 
 /* Firefox */
@@ -182,4 +183,98 @@ input[type="number"] {
 * {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--border)) transparent;
+}
+
+/* ================================
+   FULLCALENDAR CUSTOM STYLES
+   ================================ */
+
+/* Container — white card with rounded corners */
+.fc {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--card);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+/* Tables use separate borders for gap-px effect */
+.fc table {
+    border-collapse: separate;
+    border-spacing: 1px;
+    background: var(--border);
+}
+
+/* Scrollgrid — no extra border */
+.fc .fc-scrollgrid {
+    border: none;
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+/* Remove FullCalendar section borders */
+.fc .fc-scrollgrid-section>td,
+.fc .fc-scrollgrid-section>th {
+    border: none;
+}
+
+/* Header row — subtle bg, uppercase, semibold */
+.fc .fc-col-header {
+    background: var(--border);
+}
+
+.fc .fc-col-header-cell {
+    background: color-mix(in srgb, var(--muted) 50%, transparent);
+    border: none;
+    padding: 10px 0;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted-foreground);
+}
+
+/* Day cells — white bg, generous height */
+.fc .fc-daygrid-day {
+    background: var(--card);
+    border: none;
+    min-height: 110px;
+    transition: background-color 0.15s ease;
+}
+
+.fc .fc-daygrid-day:hover {
+    filter: brightness(0.97);
+}
+
+/* Day number styling */
+.fc .fc-daygrid-day-number {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--foreground);
+}
+
+/* Background events — full opacity, fills the cell */
+.fc .fc-bg-event {
+    opacity: 1;
+    border-radius: 0;
+}
+
+/* Today highlight — no special bg, let the event color show */
+.fc .fc-day-today {
+    background: transparent !important;
+}
+
+.fc .fc-day-today .fc-daygrid-day-number {
+    font-weight: 700;
+}
+
+/* Non-current month days */
+.fc .fc-day-other {
+    opacity: 0.4;
+}
+
+/* Absent day cells — full red inset border */
+.fc .fc-bg-event[style*="fef2f2"] {
+    box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 1);
 }

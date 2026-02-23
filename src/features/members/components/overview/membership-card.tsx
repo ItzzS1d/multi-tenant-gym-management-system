@@ -26,13 +26,14 @@ export default function MembershipCard({
                     Current Plan
                 </p>
                 <p className="text-xl font-bold mb-4">
-                    {memberDetails?.memberPlans?.[0]?.plan?.name || "No Active Plan"}
+                    {memberDetails?.memberPlans?.[0]?.plan?.name ||
+                        "No Active Plan"}
                 </p>
 
                 <div className="flex justify-between items-end">
                     <p className="text-2xl font-bold text-primary">
                         {formatCurrency(
-                            memberDetails?.memberPlans?.[0]?.plan?.price || 0
+                            memberDetails?.memberPlans?.[0]?.plan?.price || 0,
                         )}{" "}
                         <span className="text-sm text-white/70">/mo</span>
                     </p>
@@ -44,10 +45,11 @@ export default function MembershipCard({
                 <div className="flex justify-between text-sm pb-2 border-b border-[#e7f3eb]">
                     <span>Status</span>
                     <span
-                        className={`font-medium ${memberDetails?.memberPlans?.[0]?.status === "ACTIVE"
-                            ? "text-emerald-600"
-                            : "text-red-500"
-                            }`}
+                        className={`font-medium ${
+                            memberDetails?.memberPlans?.[0]?.status === "ACTIVE"
+                                ? "text-emerald-600"
+                                : "text-red-500"
+                        }`}
                     >
                         {memberDetails?.memberPlans?.[0]?.status || "INACTIVE"}
                     </span>
@@ -58,12 +60,12 @@ export default function MembershipCard({
                     <span className="font-medium">
                         {memberDetails?.memberPlans?.[0]?.endDate
                             ? new Date(
-                                memberDetails.memberPlans[0].endDate
-                            ).toLocaleDateString("en-US", {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                            })
+                                  memberDetails.memberPlans[0].endDate,
+                              ).toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                              })
                             : "N/A"}
                     </span>
                 </div>
@@ -86,10 +88,6 @@ export default function MembershipCard({
                     </div>
                 </div>
             </div>
-
-            <button className="w-full mt-5 py-2 rounded-lg border border-[#e7f3eb] text-sm font-medium hover:bg-[#f8fcf9]">
-                Manage Billing
-            </button>
         </section>
     );
 }

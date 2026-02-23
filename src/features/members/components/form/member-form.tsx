@@ -28,7 +28,7 @@ import { toast } from "sonner";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { useActionHandler } from "@/shared/hooks/useActionhandler";
 import { createNewMemberAction } from "../../new/member-actions";
-import { cn } from "@/shared/lib/utils";
+import { cn, normalizeName } from "@/shared/lib/utils";
 import {
     Avatar,
     AvatarFallback,
@@ -103,41 +103,41 @@ const NewMemberForm = ({
     const plans =
         plansList && plansList.length > 0
             ? plansList.map((plan) => ({
-                label: `${plan.name} (${plan.price})/${plan.durationInDays} Months`,
-                value: plan.id,
-            }))
+                  label: `${plan.name} (${plan.price})/${plan.durationInDays} Months`,
+                  value: plan.id,
+              }))
             : [
-                {
-                    label: "No Plans Found",
-                    value: "null",
-                    disabled: true,
-                },
-            ];
+                  {
+                      label: "No Plans Found",
+                      value: "null",
+                      disabled: true,
+                  },
+              ];
     const assignedTrainers =
         trainersList && trainersList.length > 0
             ? trainersList.map((trainer) => ({
-                label: `${(
-                    <div className="flex items-center gap-1">
-                        <Avatar>
-                            <AvatarImage
-                                src={trainer.memberDetails?.image}
-                                alt={trainer.memberDetails?.firstName}
-                            />
-                            <AvatarFallback className={"uppercase"}>
-                                {`${trainer.memberDetails?.firstName[0]} ${trainer.memberDetails?.lastName[0]}`}
-                            </AvatarFallback>
-                        </Avatar>
-                    </div>
-                )}${trainer.memberDetails?.firstName} ${trainer.memberDetails?.lastName}     `,
-                value: trainer.id,
-            }))
-            : [
-                {
-                    label: "No Trainers Found",
-                    value: "null",
-                    disabled: true,
-                },
-            ];
+                  label: (
+                      <div className="flex items-center gap-2">
+                          <Avatar>
+                              <AvatarImage
+                                  src={
+                                      trainer.user.image || "/default-user.png"
+                                  }
+                                  alt={normalizeName(trainer.user.name, "full")}
+                              />
+                              <AvatarFallback className="uppercase">
+                                  {normalizeName(trainer.user.name, "full")}
+                              </AvatarFallback>
+                          </Avatar>
+                          <span>
+                              {normalizeName(trainer.user.name, "full")}
+                          </span>
+                      </div>
+                  ),
+                  value: trainer.id,
+              }))
+            : [{ label: "No Trainers Found", value: "null", disabled: true }];
+
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) {
@@ -432,7 +432,10 @@ const NewMemberForm = ({
                             <Button
                                 type="submit"
                                 variant={loading ? "secondary" : "default"}
-                                className={cn("w-36", !loading && "text-accent")}
+                                className={cn(
+                                    "w-36",
+                                    !loading && "text-accent",
+                                )}
                             >
                                 {loading ? (
                                     <>

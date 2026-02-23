@@ -13,7 +13,6 @@ import { ActionResponse } from "@/shared/lib/action-response";
 import { revalidatePath } from "next/cache";
 import { v2 as cloudinary } from "cloudinary";
 import { createAuditLog, getAuditMetadata } from "@/shared/lib/server-utils";
-import { headers } from "next/headers";
 import { addDays, endOfDay } from "date-fns";
 
 export const addNewNoteAction = async (
@@ -44,7 +43,6 @@ export const addNewNoteAction = async (
         return handleActionError(error);
     }
 };
-
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -91,7 +89,7 @@ export const createNewMemberAction = async (
         });
 
         uploadedPublicId = imageUploadRes.public_id;
-        const metadata = await getAuditMetadata()
+        const metadata = await getAuditMetadata();
         await prisma.$transaction(async (tx) => {
             if (data.assignedTrainerId) {
                 const trainer = await tx.gymMember.findFirst({
@@ -115,14 +113,35 @@ export const createNewMemberAction = async (
             if (!plan) {
                 throw new Error("Invalid form data");
             }
-            const expirationDate = addDays(new Date(), plan.durationInDays);
+            const expirationDate = addDays(data.startDate, plan.durationInDays);
             const expirationDateEndOfDay = endOfDay(expirationDate);
+            const user = await tx.user.create({
+                data: {
+                    email: data.email,
+                    phone: data.phone,
+                    name: `${data.firstName} ${data.lastName}`,
+                    emailVerified: false,
+                },
+            });
             const member = await tx.gymMember.create({
                 data: {
                     gymId: currentMember.organizationId,
                     role: "member",
                     assignedTrainerId: data.assignedTrainerId,
                     isActive: true,
+                    userId: user.id,
+
+                    memberDetails: {
+                        create: {
+                            gender: data.gender,
+                            address: data.address,
+                            emergencyName: data.emergencyName,
+                            emergencyPhone: data.emergencyPhone,
+                            relationship: data.relationship,
+                            dob: data.dob,
+                            image: imageUploadRes.secure_url,
+                        },
+                    },
                     memberPlans: {
                         create: {
                             gymId: currentMember.organizationId,
@@ -135,27 +154,12 @@ export const createNewMemberAction = async (
                             planPriceSnapshot: plan.price,
                         },
                     },
-
-                    memberDetails: {
-                        create: {
-                            gender: data.gender,
-                            address: data.address,
-                            emergencyName: data.emergencyName,
-                            emergencyPhone: data.emergencyPhone,
-                            relationship: data.relationship,
-                            dob: data.dob,
-                            email: data.email,
-                            firstName: data.firstName,
-                            lastName: data.lastName,
-                            phone: data.phone,
-                            image: imageUploadRes.secure_url,
-                        },
-                    },
                 },
                 include: {
                     memberPlans: true,
                 },
             });
+
             const memberRecord = member.memberPlans[0];
 
             await tx.payment.create({
@@ -172,8 +176,8 @@ export const createNewMemberAction = async (
             await createAuditLog(
                 {
                     action: "CREATE",
-                    actorEmail: currentMember?.memberDetails.email || "",
-                    actorName: currentMember.memberDetails.name,
+                    actorEmail: currentMember.user.email || "",
+                    actorName: currentMember.user.name,
                     entity: "MEMBER",
                     status: "SUCCESS",
                     entityId: member.id,
@@ -189,7 +193,8 @@ export const createNewMemberAction = async (
                         },
                     },
                 },
-                tx, metadata
+                tx,
+                metadata,
             );
         });
 

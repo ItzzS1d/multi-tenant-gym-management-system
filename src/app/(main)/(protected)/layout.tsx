@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import "../../globals.css";
-import { requireUser } from "@/shared/lib/session";
-// import CompleteOnboarding from "@/features/onboarding/components/complete-onboarding-modal";
+import Header from "@/shared/main/components/header";
+import { isAuthenticated } from "@/shared/lib/session";
+import { redirect } from "next/navigation";
+import { RedirectType } from "next/navigation";
 
 export const metadata: Metadata = {
     title: "GymMart | All-in-One Gym Management Software",
@@ -18,10 +20,12 @@ export default async function MainRootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    const { user } = await requireUser();
+    if (!(await isAuthenticated())) {
+        return redirect("/login", RedirectType.replace);
+    }
     return (
         <>
-            {/*{!user.hasCompletedOnboarding && <CompleteOnboarding />}*/}
+            <Header />
             {children}
         </>
     );

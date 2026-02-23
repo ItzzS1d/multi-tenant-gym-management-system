@@ -1,6 +1,6 @@
 import NotFound from "@/shared/components/404";
 import { SidebarProvider } from "@/shared/components/ui/sidebar";
-import { constructUrl } from "@/shared/lib/utils";
+import { constructUrl } from "@/shared/lib/server-utils";
 
 const NotFounPage = async () => {
     return (

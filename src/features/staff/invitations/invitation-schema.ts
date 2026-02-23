@@ -1,29 +1,32 @@
 import { userSchema } from "@/features/auth/validations/client-validation";
 import * as z from "zod";
 
-export const invitationSchema = userSchema
+export const accepteInvitationSchema = z.object({
+    id: z.cuid({ error: "invalid id provied" }),
+});
+export const createInvitationSchema = userSchema
     .pick({
         email: true,
         firstName: true,
         lastName: true,
+        phone: true,
         password: true,
     })
     .extend({
-        confirmPassword: z
-            .string()
-            .min(8)
-            .max(100)
-            .regex(
-                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-                "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character",
-            ),
+        confirmPassword: userSchema.shape.password,
     })
     .superRefine((data, ctx) => {
         if (data.password !== data.confirmPassword) {
             ctx.addIssue({
                 code: "custom",
-                message: "Passwords do not match",
+                message: "password does not match",
+                path: ["confirmPassword", "password"],
             });
         }
     });
-export type InvitationSchema = z.infer<typeof invitationSchema>;
+export const revokeInvitationSchema = accepteInvitationSchema;
+export const resendInvitationSchema = accepteInvitationSchema;
+export type AccepteInvitationSchema = z.infer<typeof accepteInvitationSchema>;
+export type revokeInvitationSchema = z.infer<typeof revokeInvitationSchema>;
+export type ResendInvitationSchema = z.infer<typeof resendInvitationSchema>;
+export type CreateInvitationSchma = z.infer<typeof createInvitationSchema>;

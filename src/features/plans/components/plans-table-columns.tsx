@@ -40,15 +40,14 @@ export const PLANS_TABLE_COLUMNS: ColumnDef<PlansDashboardData>[] = [
         accessorKey: "durationInDays",
         header: "DURATION",
         cell: ({ row }) => {
-            const duration = intervalToDuration({
-                start: 0,
-                end: row.original.durationInDays * 24 * 60 * 60 * 1000,
-            });
+            const durationInDays = row.original.durationInDays;
 
-            const durationLabel = duration.months
-                ? `${duration.months} Month${duration.months > 1 ? "s" : ""}`
-                : `${row.original.durationInDays} Days`;
-            return durationLabel;
+            if (durationInDays % 30 === 0) {
+                const months = durationInDays / 30;
+                return `${months} Month${months > 1 ? "s" : ""}`;
+            }
+
+            return `${durationInDays} Days`;
         },
     },
     {

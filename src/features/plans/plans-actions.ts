@@ -16,7 +16,6 @@ import { handleActionError } from "@/shared/lib/handle-action-error";
 import { ActionResponse } from "@/shared/lib/action-response";
 import { revalidatePath } from "next/cache";
 
-
 export const createPlan = async (
     formData: CreatePlanSchema,
 ): Promise<ActionResponse<void>> => {
@@ -33,7 +32,7 @@ export const createPlan = async (
             const plan = await tx.plan.create({
                 data: {
                     name: data.name,
-                    durationInDays: data.durationInDays,
+                    durationInDays: data.durationInDays * 30,
                     price: data.price,
                     gymId: currentStaff.organizationId,
                     isActive: data.isActive,
@@ -42,17 +41,21 @@ export const createPlan = async (
                 },
             });
 
-            await createAuditLog({
-                action: "CREATE",
-                actorEmail: currentStaff.memberDetails?.email || "Unknown",
-                actorName: currentStaff.memberDetails?.name || "Unknown",
-                actor: {
-                    connect: { id: currentStaff.id },
+            await createAuditLog(
+                {
+                    action: "CREATE",
+                    actorEmail: currentStaff.user.email,
+                    actorName: currentStaff.user.name,
+                    actor: {
+                        connect: { id: currentStaff.id },
+                    },
+                    entity: "PLAN",
+                    status: "SUCCESS",
+                    entityId: plan.id,
                 },
-                entity: "PLAN",
-                status: "SUCCESS",
-                entityId: plan.id,
-            }, tx, metadata);
+                tx,
+                metadata,
+            );
         });
 
         revalidatePath("/plans");
@@ -87,7 +90,9 @@ export const updatePlan = async (
                 },
                 data: {
                     name: data.name,
-                    durationInDays: data.durationInDays,
+                    durationInDays: data.durationInDays
+                        ? data.durationInDays * 30
+                        : undefined,
                     price: data.price,
                     description: data.description,
                     isActive: data.isActive,
@@ -95,19 +100,23 @@ export const updatePlan = async (
                 },
             }),
 
-            createAuditLog({
-                action: "UPDATE",
-                actorEmail: currentStaff.memberDetails?.email || "Unknown",
-                actorName: currentStaff.memberDetails.name || "Unknown",
-                actor: {
-                    connect: {
-                        id: currentStaff.id,
+            createAuditLog(
+                {
+                    action: "UPDATE",
+                    actorEmail: currentStaff.user?.email || "Unknown",
+                    actorName: currentStaff.user.name || "Unknown",
+                    actor: {
+                        connect: {
+                            id: currentStaff.id,
+                        },
                     },
+                    entity: "PLAN",
+                    status: "SUCCESS",
+                    entityId: data.id,
                 },
-                entity: "PLAN",
-                status: "SUCCESS",
-                entityId: data.id,
-            }, prisma, metadata),
+                prisma,
+                metadata,
+            ),
         ]);
 
         revalidatePath("/plans");
@@ -144,27 +153,31 @@ export const togglePlanStatus = async (
                 },
             }),
 
-            createAuditLog({
-                action: "UPDATE",
-                actorEmail: currentStaff.memberDetails?.email || "Unknown",
-                actorName: currentStaff.memberDetails.name || "Unknown",
-                actor: {
-                    connect: {
-                        id: currentStaff.id,
+            createAuditLog(
+                {
+                    action: "UPDATE",
+                    actorEmail: currentStaff.user.email,
+                    actorName: currentStaff.user.name,
+                    actor: {
+                        connect: {
+                            id: currentStaff.id,
+                        },
+                    },
+                    entity: "PLAN",
+                    status: "SUCCESS",
+                    entityId: data.id,
+                    changes: {
+                        before: {
+                            isActive: data.isActive,
+                        },
+                        after: {
+                            isActive: !data.isActive,
+                        },
                     },
                 },
-                entity: "PLAN",
-                status: "SUCCESS",
-                entityId: data.id,
-                changes: {
-                    before: {
-                        isActive: data.isActive,
-                    },
-                    after: {
-                        isActive: !data.isActive,
-                    },
-                },
-            }, prisma, metadata),
+                prisma,
+                metadata,
+            ),
         ]);
         revalidatePath("/plans");
         return {

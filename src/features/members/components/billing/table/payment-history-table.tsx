@@ -8,7 +8,13 @@ import {
     getPaginationRowModel,
     useReactTable,
 } from "@tanstack/react-table";
-import { CalendarDays, Download, Receipt, Search } from "lucide-react";
+import {
+    Banknote,
+    CalendarDays,
+    Download,
+    Receipt,
+    Search,
+} from "lucide-react";
 import { use } from "react";
 import EmptyPaymentsHistoryTableState from "../../../../../shared/components/table/empty-table-state";
 
@@ -37,8 +43,8 @@ function PaymentHistoryTable<TData, TValue>({
             {/* Header */}
             <div className="flex justify-between items-center   py-2.5 shadow px-4 rounded-t-xl border-[#e7f3eb]">
                 <h3 className="text-lg font-semibold flex items-center  text-primary">
-                    <CalendarDays className="mr-2" aria-hidden />
-                    <span className="text-black">Attendance Log</span>
+                    <Banknote className="mr-2" aria-hidden />
+                    <span className="text-black">Payments History</span>
                 </h3>
                 <div className="flex gap-2 text-xs items-center">
                     <Button variant="link" size="icon-lg">
@@ -106,7 +112,8 @@ function PaymentHistoryTable<TData, TValue>({
             {/* Footer */}
             <div className="flex justify-between items-center  p-4 text-xs  border-t bg-[#f8fcf9]">
                 <p className="text-[10px] md:text-sm text-[#4c9a66] dark:text-text-sub-dark  px-2 py-1 rounded whitespace-nowrap">
-                    Showing 7 of 12 check-ins this month
+                    Showing {table.getRowModel().rows.length} of{" "}
+                    {tableData.length} records
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                     <Button

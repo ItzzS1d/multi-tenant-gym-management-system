@@ -1,38 +1,46 @@
-import { ReactNode } from "react";
 import { Skeleton } from "../ui/skeleton";
+import { StatsConfig } from "./stats-section";
 
-export interface StatsCardProps {
-    title: string;
-    icon: ReactNode;
-    value?: string | number;
-    description: string;
-    isLoading?: boolean;
-}
-
-export default function StatsCard({
-    description,
-    icon,
-    title,
-    value,
-    isLoading = false,
-}: StatsCardProps) {
-    return (
-        <div>
-            {/* Total Visits */}
-            <div className="bg-surface-light dark:bg-surface-dark p-3 px-4 rounded-xl shadow-sm border border-[#e7f3eb] dark:border-[#2a4034]">
+export type CardProps = StatsConfig & {
+    value: string | number;
+};
+type StatsCardProps =
+    | {
+        status: "loading";
+    }
+    | {
+        status: "success";
+        data: CardProps;
+    };
+export default function StatsCard(props: StatsCardProps) {
+    if (props.status === "loading") {
+        return (
+            <div className="bg-surface-light p-3 px-4 rounded-xl shadow-sm border border-[#e7f3eb] animate-pulse">
                 <div className="flex items-center justify-between mb-2">
-                    <p className="text-lg font-medium ">{title}</p>
-                    <span className="text-[10px] md:text-xs text-[#4c9a66] dark:text-text-sub-dark bg-[#e7f3eb] px-2 py-1 rounded whitespace-nowrap">
-                        {icon}
-                    </span>
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-8 w-8 rounded" />
                 </div>
-                <h4 className="text-3xl font-bold">
-                    {isLoading ? <Skeleton className="w-25 h-8" /> : value}
-                </h4>
-                <p className="text-xs text-text-sub-light mt-2">
-                    {description}
-                </p>
+                <Skeleton className="h-8 w-20 mb-2" />
+                <Skeleton className="h-4 w-32" />
             </div>
+        );
+    }
+
+    const { title, icon, value, description } = props.data;
+
+    const valueString = String(value);
+    const valueFontSize = valueString.length > 12 ? "text-2xl" : "text-3xl";
+
+    return (
+        <div className="bg-surface-light dark:bg-surface-dark p-3 px-4 rounded-xl shadow-sm border border-[#e7f3eb]">
+            <div className="flex items-center justify-between mb-2">
+                <p className="text-lg font-medium capitalize">{title}</p>
+                <span className="text-xs text-[#4c9a66] bg-[#e7f3eb] px-2 py-1 rounded">
+                    {icon}
+                </span>
+            </div>
+            <h4 className={`${valueFontSize} font-bold`}>{value}</h4>
+            <p className="text-xs text-muted-foreground mt-2">{description}</p>
         </div>
     );
 }

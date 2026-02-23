@@ -7,7 +7,24 @@ import {
 import AttendanceLogTableSkeleton from "./skeletons/table-skeleton";
 import { ATTENDANCE_TABLE_COLUMNS } from "./table-columns";
 import StatsCardSkeleton from "./skeletons/stats-card-skeleton";
-import Stats from "./stats";
+import { StatsSection } from "@/shared/components/stats/stats-section";
+import { BarChart, Clock, Timer } from "lucide-react";
+
+const ATTENDANCE_STATS_CONFIG = {
+    totalVisits: {
+        icon: <BarChart size={14} />,
+        description: "Total number of visits",
+    },
+    avgDuration: {
+        icon: <Timer size={14} />,
+        description: "Average duration of each visit",
+    },
+    peakHourLabel: {
+        title: "Peak Visit Time",
+        icon: <Clock size={14} />,
+        description: "Peak time of day for visits",
+    },
+};
 
 const AttendanceTab = async ({
     memberId,
@@ -28,7 +45,11 @@ const AttendanceTab = async ({
     return (
         <div>
             <Suspense fallback={<StatsCardSkeleton />}>
-                <Stats statsPromise={attendancePromise} />
+                <StatsSection
+                    config={ATTENDANCE_STATS_CONFIG}
+                    promise={attendancePromise}
+                    gridCount={3}
+                />
             </Suspense>
             <div className="grid grid-cols-1 ">
                 <Suspense fallback={<StatsCardSkeleton />}>
@@ -36,7 +57,9 @@ const AttendanceTab = async ({
                 </Suspense>
                 <Suspense fallback={<AttendanceLogTableSkeleton />}>
                     <AttendanceLogTable
-                        attendancePromise={attendancePromise}
+                        attendancePromise={attendancePromise.then(
+                            (res) => res.records,
+                        )}
                         columns={ATTENDANCE_TABLE_COLUMNS}
                         availableYears={months.availableYears}
                         month={month}

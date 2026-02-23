@@ -5,23 +5,20 @@ import { onboardingSchema, OnboardingSchema } from "./validations";
 import { handleActionError } from "@/shared/lib/handle-action-error";
 import { requireUser } from "@/shared/lib/session";
 import { redirect } from "next/navigation";
-import { protocol } from "@/shared/lib/utils";
 import { setCookie } from "@/shared/lib/cookie-util";
 import { RedirectType } from "next/navigation";
-import { Route } from "next";
 import { auth } from "@/shared/config/auth.config";
 import {
     AlreadyExistsError,
     ValidationError,
 } from "@/shared/lib/error-classes";
-import { headers } from "next/headers";
 import prisma from "@/shared/config/prisma.config";
-import { createAuditLog, getAuditMetadata } from "@/shared/lib/server-utils";
+import {
+    constructUrl,
+    createAuditLog,
+    getAuditMetadata,
+} from "@/shared/lib/server-utils";
 
-const domain =
-    process.env.NODE_ENV === "development"
-        ? `${process.env.BETTER_AUTH_DOMAIN}:3000`
-        : process.env.BETTER_AUTH_DOMAIN;
 export async function completeOnboardingAction(
     formData: OnboardingSchema,
 ): Promise<ActionResponse<void>> {
@@ -48,9 +45,6 @@ export async function completeOnboardingAction(
             throw new AlreadyExistsError("You already have a gym set up");
         }
 
-        const h = await headers();
-        const ip = h.get("x-forwarded-for") || "unknown";
-        const userAgent = h.get("user-agent") || "unknown";
         await prisma.$transaction(async (tx) => {
             const newGym = await tx.gym.create({
                 data: {
@@ -94,7 +88,7 @@ export async function completeOnboardingAction(
                     },
                 });
             }
-            const metadata = await getAuditMetadata()
+            const metadata = await getAuditMetadata();
             await createAuditLog(
                 {
                     action: "CREATE",
@@ -116,7 +110,8 @@ export async function completeOnboardingAction(
                     changes: "none",
                     sessionId: recentSession?.id,
                 },
-                tx, metadata
+                tx,
+                metadata,
             );
         });
 
@@ -129,6 +124,6 @@ export async function completeOnboardingAction(
         return handleActionError(error);
     }
 
-    const url = `${protocol}://${data?.subDomain}.${domain}/members` as Route;
+    const url = constructUrl("/members", data.subDomain);
     redirect(url, RedirectType.replace);
 }

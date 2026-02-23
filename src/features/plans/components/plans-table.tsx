@@ -36,14 +36,14 @@ import { Combobox } from "@/shared/components/ui/combobox";
 
 interface PlansTableProps {
     columns: ColumnDef<PlansDashboardData>[];
-    plansPromise: ReturnType<typeof getPlansDashboardData>;
+    data: Promise<PlansDashboardData[]>;
 }
 
-function PlansTable({ plansPromise, columns }: PlansTableProps) {
+function PlansTable({ data: plansPromise, columns }: PlansTableProps) {
     const tableData = use(plansPromise);
     const [columnFilter, setColumnFilter] = useState<ColumnFiltersState>([]);
     const table = useReactTable({
-        data: tableData.plans,
+        data: tableData,
         columns: columns,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
@@ -150,7 +150,7 @@ function PlansTable({ plansPromise, columns }: PlansTableProps) {
                 </thead>
 
                 <tbody className="divide-y divide-[#e7f3eb]  ">
-                    {tableData.plans.length === 0 ? (
+                    {tableData.length === 0 ? (
                         <tr className="bg-transparent hover:bg-transparent">
                             <td colSpan={columns.length} className="p-0">
                                 <EmptyAttendanceTableState
@@ -198,7 +198,7 @@ function PlansTable({ plansPromise, columns }: PlansTableProps) {
             <div className="flex justify-between items-center  p-4 text-xs  border-t bg-[#f8fcf9]">
                 <p className="text-[10px] md:text-sm text-[#4c9a66] dark:text-text-sub-dark  px-2 py-1 rounded whitespace-nowrap">
                     Showing {table.getRowModel().rows.length} of{" "}
-                    {tableData.plans.length} plans{" "}
+                    {tableData.length} plans{" "}
                     {/*{currentLabel && `in ${currentLabel}`}*/}
                 </p>
                 <div className="grid grid-cols-2 gap-3">

@@ -1,40 +1,50 @@
 "use server";
 
+import prisma from "@/shared/config/prisma.config";
 import { ActionResponse } from "@/shared/lib/action-response";
-import { InviteStaffSchema } from "./staff-schema";
-import { requirePermissionAndReturnUser } from "@/shared/lib/session";
-import { auth } from "@/shared/config/auth.config";
-import { headers } from "next/headers";
-import { revalidatePath } from "next/cache";
+import { ValidationError } from "@/shared/lib/error-classes";
 import { handleActionError } from "@/shared/lib/handle-action-error";
+import { requirePermissionAndReturnUser } from "@/shared/lib/session";
+import {
+    disableStaffAccountSchema,
+    DisableStaffAccountSchema,
+} from "./staff-schema";
 
-export const createStaffInvitation = async (
-    formData: InviteStaffSchema,
-): Promise<ActionResponse<void | unknown>> => {
+export const disableStaffAccount = async (
+    formData: DisableStaffAccountSchema,
+): Promise<ActionResponse<void>> => {
     try {
-        const result = await requirePermissionAndReturnUser("invitation", [
-            "create",
+        const { success, data } = disableStaffAccountSchema.safeParse(formData);
+        if (!success) {
+            throw new ValidationError("Invalid input data");
+        }
+        // check if the current user has permission to disable accounts
+        const currentStaff = await requirePermissionAndReturnUser("staff", [
+            "update",
         ]);
 
-        await auth.api.createInvitation({
-            body: {
-                email: formData.email,
-                role: formData.role,
-                organizationId: result.organizationId,
-                resend: true,
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                personalMessage: formData.personalMessage,
+        //  update the user's account to be disabled
+        await prisma.gymMember.update({
+            where: {
+                gymId_userId: {
+                    gymId: currentStaff.organizationId,
+                    userId: data.id,
+                },
             },
-            headers: await headers(),
+            data: {
+                isActive: false,
+                deactivatedAt: new Date(),
+                deactivatedBy: currentStaff.id,
+                updatedAt: new Date(),
+                deactivationReason: data.disabledReason,
+            },
         });
-        revalidatePath("/staff");
         return {
             type: "SUCCESS",
-            message: "invitation sent successfully",
+            message: "Account disabled successfully.",
         };
     } catch (error) {
+        console.error(error);
         return handleActionError(error);
     }
 };
-export const accepteStaffInvitation = async () => {};

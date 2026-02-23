@@ -37,7 +37,7 @@ import InviteStaffForm from "./invite-staff-form";
 
 interface DataTableProps {
     columns: ColumnDef<StaffTableColumnProps>[];
-    StaffListPromise: ReturnType<typeof getStaffStatsAndTableData>;
+    data: Promise<StaffTableColumnProps[]>;
 }
 const STAFF_ROLES_OPTIONS = [
     {
@@ -53,22 +53,19 @@ const STAFF_ROLES_OPTIONS = [
         value: Role.trainer,
     },
 ];
-function StaffTable({
-    StaffListPromise: attendancePromise,
-    columns,
-}: DataTableProps) {
-    const tableData = use(attendancePromise);
+function StaffTable({ data: staffPromise, columns }: DataTableProps) {
+    const tableData = use(staffPromise);
     const [columnFilter, setColumnFilter] = useState<ColumnFiltersState>([]);
     const [globalFilter, setGlobalFilter] = useState("");
 
-    const fuzzyFilter: FilterFn<unknown> = (row, columnId, value, addMeta) => {
+    const fuzzyFilter: FilterFn<StaffTableColumnProps> = (row, columnId, value, addMeta) => {
         const itemRank = rankItem(row.getValue(columnId), value);
         addMeta({ itemRank });
 
         return itemRank.passed;
     };
-    const table = useReactTable({
-        data: tableData.records,
+    const table = useReactTable<StaffTableColumnProps>({
+        data: tableData,
         columns: columns,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
@@ -77,7 +74,7 @@ function StaffTable({
         onGlobalFilterChange: setGlobalFilter,
         getSortedRowModel: getSortedRowModel(),
         enableGlobalFilter: true,
-        globalFilterFn: "fuzzy",
+        globalFilterFn: fuzzyFilter,
         filterFns: {
             fuzzy: fuzzyFilter,
         },
@@ -177,18 +174,26 @@ function StaffTable({
                 </thead>
 
                 <tbody className="divide-y divide-[#e7f3eb]  ">
-                    {tableData.records.length === 0 ? (
-                        <EmptyAttendanceTableState
-                            description="No staff members found. Add a new staff member to get started."
-                            title="No Staff Found"
-                            icon={<Users />}
-                        />
+                    {tableData.length === 0 ? (
+                        <tr>
+                            <td colSpan={columns.length} className="h-24 text-center">
+                                <EmptyAttendanceTableState
+                                    description="No staff members found. Add a new staff member to get started."
+                                    title="No Staff Found"
+                                    icon={<Users />}
+                                />
+                            </td>
+                        </tr>
                     ) : table.getRowModel().rows.length === 0 ? (
-                        <EmptyAttendanceTableState
-                            description="No staff members match your search criteria. Try adjusting your filters."
-                            title="No results found"
-                            icon={<Search />}
-                        />
+                        <tr>
+                            <td colSpan={columns.length} className="h-24 text-center">
+                                <EmptyAttendanceTableState
+                                    description="No staff members match your search criteria. Try adjusting your filters."
+                                    title="No results found"
+                                    icon={<Search />}
+                                />
+                            </td>
+                        </tr>
                     ) : (
                         table.getRowModel().rows.map((row, i) => (
                             <tr
@@ -216,7 +221,7 @@ function StaffTable({
             <div className="flex justify-between items-center  p-4 text-xs  border-t bg-[#f8fcf9]">
                 <p className="text-[10px] md:text-sm text-[#4c9a66] dark:text-text-sub-dark  px-2 py-1 rounded whitespace-nowrap">
                     Showing {table.getRowModel().rows.length} of{" "}
-                    {tableData.records.length} check-ins{" "}
+                    {tableData.length} check-ins{" "}
                     {/*{currentLabel && `in ${currentLabel}`}*/}
                 </p>
                 <div className="grid grid-cols-2 gap-3">

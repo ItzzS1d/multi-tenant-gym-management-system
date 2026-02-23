@@ -17,18 +17,12 @@ import { Download, Search, Users } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import EmptyAttendanceTableState from "../../../../shared/components/table/empty-table-state";
-import { getMemberList } from "../queries";
 import { MemberTableColumnProps } from "./member-table-colums";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/shared/components/ui/select";
+
 import CreateButton from "@/shared/components/create-button";
 import { getPlansList } from "../../new/queries";
-import FilterTableInput from "@/shared/components/dialog/table-filter-input";
+import FilterTableInput from "@/shared/components/table/table-filter-input";
+import TableFilterSelect from "@/shared/components/table/table-filter-select";
 
 const STATUS_FILTER = [
     {
@@ -51,27 +45,27 @@ const STATUS_FILTER = [
 
 interface DataTableProps {
     columns: ColumnDef<MemberTableColumnProps>[];
-    membersListPromise: ReturnType<typeof getMemberList>;
+    data: Promise<MemberTableColumnProps[]>;
     plansListPromise: ReturnType<typeof getPlansList>;
 }
 function MembersTable({
-    membersListPromise: attendancePromise,
+    data: membersPromise,
     columns,
     plansListPromise,
 }: DataTableProps) {
-    const tableData = use(attendancePromise);
+    const tableData = use(membersPromise);
     const plansList = use(plansListPromise);
     const [columnFilter, setColumnFilter] = useState<ColumnFiltersState>([]);
     const [globalFilter, setGlobalFilter] = useState("");
 
-    const fuzzyFilter: FilterFn<unknown> = (row, columnId, value, addMeta) => {
+    const fuzzyFilter: FilterFn<MemberTableColumnProps> = (row, columnId, value, addMeta) => {
         const itemRank = rankItem(row.getValue(columnId), value);
         addMeta({ itemRank });
 
         return itemRank.passed;
     };
-    const table = useReactTable({
-        data: tableData.records,
+    const table = useReactTable<MemberTableColumnProps>({
+        data: tableData,
         columns: columns,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
@@ -80,7 +74,7 @@ function MembersTable({
         onGlobalFilterChange: setGlobalFilter,
         getSortedRowModel: getSortedRowModel(),
         enableGlobalFilter: true,
-        globalFilterFn: "fuzzy",
+        globalFilterFn: fuzzyFilter,
         filterFns: {
             fuzzy: fuzzyFilter,
         },
@@ -105,58 +99,22 @@ function MembersTable({
                     placeholder="Search Member by email name or phone"
                 />
                 <div className="flex gap-2 text-xs items-center">
-                    <Select
-                        items={STATUS_FILTER}
-                        onValueChange={(value) => {
-                            const column = table.getColumn("status");
+                    <TableFilterSelect
+                        options={STATUS_FILTER}
+                        placeholder="Filter by status"
+                        table={table}
+                        columnName="status"
+                    />
 
-                            column?.setFilterValue(
-                                value === "all"
-                                    ? undefined
-                                    : (value as string).toUpperCase(),
-                            );
-                        }}
-                    >
-                        <SelectTrigger className="w-34">
-                            <SelectValue placeholder="Filter by status" />
-                        </SelectTrigger>
-
-                        <SelectContent>
-                            <SelectItem value="all">All</SelectItem>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="Expiring Soon">
-                                Expiring Soon
-                            </SelectItem>
-                            <SelectItem value="Expired">Expired</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Select
-                        items={plansList.map((plan) => ({
+                    <TableFilterSelect
+                        options={plansList.map((plan) => ({
                             label: plan.name,
                             value: plan.id,
                         }))}
-                        onValueChange={(value) => {
-                            const column = table.getColumn("status");
-
-                            column?.setFilterValue(
-                                value === "all"
-                                    ? undefined
-                                    : (value as string).toUpperCase(),
-                            );
-                        }}
-                    >
-                        <SelectTrigger className="w-34">
-                            <SelectValue placeholder="Filter by plan" />
-                        </SelectTrigger>
-
-                        <SelectContent>
-                            {plansList.map((plan) => (
-                                <SelectItem key={plan.id} value={plan.id}>
-                                    {plan.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                        placeholder="Filter by plan"
+                        table={table}
+                        columnName="status"
+                    />
                     <Button variant="link" size="icon-lg">
                         <Download />
                     </Button>
@@ -184,7 +142,7 @@ function MembersTable({
                 </thead>
 
                 <tbody className="divide-y divide-[#e7f3eb]  ">
-                    {tableData.records.length === 0 ? (
+                    {tableData.length === 0 ? (
                         <tr className="bg-transparent hover:bg-transparent">
                             <td colSpan={columns.length}>
                                 <EmptyAttendanceTableState
@@ -231,7 +189,7 @@ function MembersTable({
             <div className="flex justify-between items-center  p-4 text-xs  border-t bg-[#f8fcf9]">
                 <p className="text-[10px] md:text-sm text-[#4c9a66] dark:text-text-sub-dark  px-2 py-1 rounded whitespace-nowrap">
                     Showing {table.getRowModel().rows.length} of{" "}
-                    {tableData.records.length} check-ins{" "}
+                    {tableData.length} check-ins{" "}
                     {/*{currentLabel && `in ${currentLabel}`}*/}
                 </p>
                 <div className="grid grid-cols-2 gap-3">

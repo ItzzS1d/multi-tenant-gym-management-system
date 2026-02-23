@@ -11,6 +11,7 @@ import { formatCurrency, formatDate } from "@/shared/lib/utils";
 import { Badge } from "@/shared/components/ui/badge";
 import { EllipsisVertical } from "lucide-react";
 import Link from "next/link";
+import { VariantProps } from "class-variance-authority";
 
 export type MemberTableColumnProps = Awaited<
     ReturnType<typeof getMemberList>
@@ -55,6 +56,7 @@ export const MEMBERS_TABLE_COLUMNS: ColumnDef<MemberTableColumnProps>[] = [
         enableGlobalFilter: true,
         cell({ row }) {
             const { status } = row.original;
+            console.log(row.original);
             return (
                 <Badge variant={status.toLowerCase()}>
                     {status.substring(0, 1) + status.substring(1).toLowerCase()}

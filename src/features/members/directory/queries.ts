@@ -12,6 +12,7 @@ import {
 } from "date-fns";
 import { requirePermissionAndReturnUser } from "@/shared/lib/session";
 import prisma from "@/shared/config/prisma.config";
+import { normalizeName } from "@/shared/lib/utils";
 
 export const getMemberList = cache(async () => {
     try {
@@ -29,6 +30,12 @@ export const getMemberList = cache(async () => {
                 role: "member",
             },
             select: {
+                user: {
+                    select: {
+                        name: true,
+                        email: true,
+                    },
+                },
                 id: true,
                 isActive: true,
                 joinedOn: true,
@@ -39,11 +46,8 @@ export const getMemberList = cache(async () => {
                 },
                 memberDetails: {
                     select: {
-                        email: true,
                         gender: true,
                         image: true,
-                        firstName: true,
-                        lastName: true,
                     },
                 },
                 memberPlans: {
@@ -99,11 +103,11 @@ export const getMemberList = cache(async () => {
             return {
                 id: m.id,
                 image: m.memberDetails?.image,
-                email: m.memberDetails?.email,
-                firstName: m.memberDetails?.firstName || "NA",
-                lastName: m.memberDetails?.lastName || "NA",
+                email: m.user.email,
+                firstName: normalizeName(m.user.name, "first"),
+                lastName: normalizeName(m.user.name, "last"),
                 joinedAt: m.joinedOn,
-                gender: m.memberDetails?.gender || "NA",
+                gender: m.memberDetails?.gender,
                 assignedTrainer:
                     m.assignedTrainer?.name || "No Trainer assigned",
 
@@ -120,11 +124,9 @@ export const getMemberList = cache(async () => {
 
                 status: !m.isActive
                     ? "SUSPENDED"
-                    : !endDate
-                      ? "NO_PLAN"
-                      : isBefore(endDate, todayStart)
-                        ? "EXPIRED"
-                        : "ACTIVE",
+                    : !planDetails
+                        ? "NO_PLAN"
+                        : planDetails.status,
             };
         });
 

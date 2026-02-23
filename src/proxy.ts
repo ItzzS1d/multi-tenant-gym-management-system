@@ -16,6 +16,12 @@ const PUBLIC_ROUTES = [
 
 const AUTH_PAGES = ["/login", "/register"] as Route[];
 
+const ROOT_DOMIAN_PROTECTED = [
+    "/onboarding",
+    "/dashboard",
+    "/accept-invitation",
+] as Route[];
+
 export default async function Proxy(req: NextRequest) {
     const { pathname, searchParams, origin } = req.nextUrl;
 
@@ -83,7 +89,7 @@ export default async function Proxy(req: NextRequest) {
      * ───────────────────────────────
      */
 
-    if (pathname === "/onboarding" && !isAuthenticated) {
+    if (ROOT_DOMIAN_PROTECTED.includes(pathname as Route) && !isAuthenticated) {
         return NextResponse.redirect(
             new URL(
                 `/login?redirectTo=${encodeURIComponent(pathname)}`,

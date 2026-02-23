@@ -3,51 +3,51 @@ import PlansTable from "@/features/plans/components/plans-table";
 import { PLANS_TABLE_COLUMNS } from "@/features/plans/components/plans-table-columns";
 import { getPlansDashboardData } from "@/features/plans/queries";
 import React, { Suspense } from "react";
-import { Activity, Banknote, CreditCard, Folder } from "lucide-react";
-import { StatsConfigItem } from "../members/page";
+import { Activity, Banknote, Folder } from "lucide-react";
 import { StatsSection } from "@/shared/components/stats/stats-section";
+import { StatsCardsSkeleton } from "@/shared/components/stats/stats-card-skeleton";
 import TableSkeleton from "@/shared/components/table/table-skeleton";
 
 export const metadata: Metadata = {
-    title: "PLANS",
-    description: "Manage your plans",
+    title: "Plans",
+    description: "Create and manage your gym's membership plans.",
     robots: {
         index: false,
         follow: false,
     },
 };
 
-const PLANS_STATS_CONFIG = [
-    {
-        title: "Total Plans",
-        icon: <Folder size={20} />,
+const PLANS_STATS_CONFIG = {
+    totalPlans: {
+        icon: <Folder size={14} />,
         description: "Total number of plans",
-        statKey: "totalPlans",
     },
-    {
-        title: "Monthly Revenue",
-        icon: <Banknote size={20} />,
+    monthlyRevenue: {
+        icon: <Banknote size={14} />,
         description: "Monthly revenue generated",
-        statKey: "monthlyRevenue",
     },
-    {
-        title: "Active Plans",
-        icon: <Activity size={20} />,
+    activePlansCount: {
+        icon: <Activity size={14} />,
         description: "Currently active plans",
-        statKey: "activePlansCount",
     },
-] as const satisfies StatsConfigItem[];
+};
 
 const Plans = async () => {
     const plansPromise = getPlansDashboardData();
 
     return (
         <div className="space-y-5">
-            <StatsSection promise={plansPromise} items={PLANS_STATS_CONFIG} />
+            <Suspense fallback={<StatsCardsSkeleton length={3} />}>
+                <StatsSection
+                    config={PLANS_STATS_CONFIG}
+                    promise={plansPromise}
+                    gridCount={3}
+                />
+            </Suspense>
             <Suspense fallback={<TableSkeleton />}>
                 <PlansTable
                     columns={PLANS_TABLE_COLUMNS}
-                    plansPromise={plansPromise}
+                    data={plansPromise.then((res) => res.plans)}
                 />
             </Suspense>
         </div>

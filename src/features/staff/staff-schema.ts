@@ -17,4 +17,17 @@ export const inviteStaffSchema = userSchema
             .optional(),
     });
 
+export const disableStaffAccountSchema = userSchema
+    .pick({
+        id: true,
+    })
+    .extend({
+        disabledReason: z
+            .string({ error: "Invalid reason" })
+            .min(1, { message: "Reason is required" })
+            .max(255, { message: "Reason is too long" }),
+    });
 export type InviteStaffSchema = z.infer<typeof inviteStaffSchema>;
+export type DisableStaffAccountSchema = z.infer<
+    typeof disableStaffAccountSchema
+>;

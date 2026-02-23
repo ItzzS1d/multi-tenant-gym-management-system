@@ -29,7 +29,7 @@ const ContactInfo = async ({
                             EMAIL ADDRESS
                         </p>
                         <p className="text-base text-text-main-light dark:text-text-main-dark mt-1 font-medium break-all">
-                            {memberData?.memberDetails?.email || "N/A"}
+                            {memberData.user.email}
                         </p>
                     </div>
                     <div>
@@ -37,7 +37,7 @@ const ContactInfo = async ({
                             PHONE NUMBER
                         </p>
                         <p className=" font-medium break-all">
-                            {memberData?.memberDetails?.phone || "N/A"}
+                            {memberData.user.phone}
                         </p>
                     </div>
                     <div className="md:col-span-2">

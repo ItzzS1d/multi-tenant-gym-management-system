@@ -10,7 +10,6 @@ import {
     TabsTrigger,
 } from "@/shared/components/ui/tabs";
 import prisma from "@/shared/config/prisma.config";
-import { currentUser } from "@/shared/lib/session";
 import { CalendarDays, ReceiptText, SquareChartGantt } from "lucide-react";
 import { Suspense } from "react";
 import ProfileHeaderCard from "@/features/members/components/overview/profile-header-card";
@@ -18,7 +17,6 @@ import OverViewTab from "@/features/members/components/overview/overview-tab";
 import AttendanceTab from "@/features/members/components/attendance/attendace-tab";
 import BillingTab from "@/features/members/components/billing/billing-tab";
 import { notFound } from "next/navigation";
-
 const tabs = [
     {
         label: "Overview",
@@ -35,12 +33,27 @@ const tabs = [
         value: "billing",
         icon: ReceiptText,
     },
-    {
-        label: "Progress",
-        value: "progress",
-        icon: SquareChartGantt,
-    },
 ] as const;
+
+import { Metadata } from "next";
+import Link from "next/link";
+
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ memberId: string }>;
+}): Promise<Metadata> {
+    const { memberId } = await params;
+    const member = await prisma.gymMember.findUnique({
+        where: { id: memberId },
+        select: { user: { select: { name: true } } },
+    });
+
+    return {
+        title: member?.user?.name || "Member Details",
+        description: `View profile and manage details for ${member?.user?.name || "this member"}.`,
+    };
+}
 
 const MemberPage = async ({
     params,
@@ -81,12 +94,14 @@ const MemberPage = async ({
                     <OverViewTab
                         memberNotesPromise={memberNotesPromise}
                         memberOverviewPromise={memberOverviewPromise}
-                        memberId={member?.id ?? "w"}
-                        memberName={member?.user?.name ?? "w"}
+                        memberId={member.id}
+                        memberName={member.user.name}
                     />
                 </TabsContent>
                 <TabsContent value="attendance">
-                    <AttendanceTab memberId={member?.id} />
+                    <Suspense>
+                        <AttendanceTab memberId={member?.id} />
+                    </Suspense>
                 </TabsContent>
                 <TabsContent value="billing">
                     <BillingTab memberId={member?.id} />

@@ -1,43 +1,48 @@
 import { Dumbbell, User, Users } from "lucide-react";
 import React, { Suspense } from "react";
-import { StatsConfigItem } from "../members/page";
 import { StatsSection } from "@/shared/components/stats/stats-section";
+import { StatsCardsSkeleton } from "@/shared/components/stats/stats-card-skeleton";
 import TableSkeleton from "@/shared/components/table/table-skeleton";
 import { getStaffStatsAndTableData } from "@/features/staff/staff-queries";
 import StaffTable from "@/features/staff/components/staff-table";
 import { STAFF_TABLE_COLUMNS } from "@/features/staff/components/staff-table-columns";
 
-const STAFF_STATS_CONFIG = [
-    {
-        title: "Total Staff",
-        icon: <Users size={20} />,
-        description: "Total number of members",
-        statKey: "totalStaff",
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "Staff",
+    description: "Manage your gym staff, trainers, and admins.",
+};
+
+const STAFF_STATS_CONFIG = {
+    totalStaff: {
+        icon: <Users size={14} />,
+        description: "Total number of staff",
     },
-    {
-        title: "Active Admins",
-        icon: <User size={20} />,
-        description: "Members Joined this month",
-        statKey: "totalAdmins",
+    totalAdmins: {
+        icon: <User size={14} />,
+        description: "Active admin accounts",
     },
-    {
-        title: "Active Trainers",
-        icon: <Dumbbell size={20} />,
-        description: "Members Membership Expiring soon",
-        statKey: "totalTrainers",
+    totalTrainers: {
+        icon: <Dumbbell size={14} />,
+        description: "Active trainer accounts",
     },
-] as const satisfies StatsConfigItem[];
+};
+
 const Staff = () => {
     const staffListPromise = getStaffStatsAndTableData();
     return (
-        <main>
-            <StatsSection
-                items={STAFF_STATS_CONFIG}
-                promise={staffListPromise}
-            />
+        <main className="space-y-5">
+            <Suspense fallback={<StatsCardsSkeleton length={3} />}>
+                <StatsSection
+                    config={STAFF_STATS_CONFIG}
+                    promise={staffListPromise}
+                    gridCount={3}
+                />
+            </Suspense>
             <Suspense fallback={<TableSkeleton />}>
                 <StaffTable
-                    StaffListPromise={staffListPromise}
+                    data={staffListPromise.then((res) => res.records)}
                     columns={STAFF_TABLE_COLUMNS}
                 />
             </Suspense>

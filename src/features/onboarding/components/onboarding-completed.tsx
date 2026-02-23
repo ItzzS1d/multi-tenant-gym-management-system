@@ -1,10 +1,9 @@
 import { getActiveOrganization } from "@/shared/lib/tenant";
-import { protocol } from "@/shared/lib/utils";
 import { ArrowRight, Home } from "lucide-react";
-import { Route } from "next";
 import Link from "next/link";
 import { use } from "react";
 import { AnimatedCheckIcon } from "./animated-check-icon";
+import { constructUrl } from "@/shared/lib/server-utils";
 
 const OnboardingCompleted = ({
     organization,
@@ -12,12 +11,8 @@ const OnboardingCompleted = ({
     organization: ReturnType<typeof getActiveOrganization>;
 }) => {
     const activeOrg = use(organization);
-    const domain =
-        process.env.NODE_ENV === "development"
-            ? `${process.env.BETTER_AUTH_DOMAIN}:3000`
-            : `${process.env.BETTER_AUTH_DOMAIN}`;
-    const url =
-        `${protocol}://${activeOrg?.gym.slug}.${domain}/dashboard` as Route;
+
+    const url = constructUrl("/dashboard", activeOrg.gym.slug);
     return (
         <main className="flex-1 flex flex-col items-center justify-center  min-h-svh">
             <div className="w-full max-w-lg bg-surface-light dark:bg-surface-dark rounded-2xl shadow-xl dark:shadow-none border border-gray-100 dark:border-gray-800 p-8 sm:p-12 text-center transition-all">

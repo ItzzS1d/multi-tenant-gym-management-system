@@ -91,7 +91,7 @@ const OnboardingForm = () => {
                                     {process.env.NEXT_PUBLIC_BETTER_AUTH_DOMAIN}
                                 </span>
                             </div>
-                            <p className="text-xs text-slate-400 font-medium ">
+                            <p className="text-xs text-gray-500 font-medium ">
                                 Your site will be accessible at{" "}
                                 {form.watch("subDomain")}.
                                 {process.env.NEXT_PUBLIC_BETTER_AUTH_DOMAIN}

@@ -1,15 +1,11 @@
+import StatsCard from "./stats-card";
 import { StatsGrid } from "./stats-card-grid";
-import StatsCard, { StatsCardProps } from "./stats-card";
 
-export const MembersStatsSkeleton = ({
-    items,
-}: {
-    items: StatsCardProps[];
-}) => {
+export const StatsCardsSkeleton = ({ length }: { length: number }) => {
     return (
-        <StatsGrid>
-            {items.map((item, i) => (
-                <StatsCard key={i} {...item} />
+        <StatsGrid gridCount={length}>
+            {Array.from({ length }).map((_, i) => (
+                <StatsCard status="loading" key={i} />
             ))}
         </StatsGrid>
     );

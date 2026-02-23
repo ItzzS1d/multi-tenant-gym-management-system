@@ -125,10 +125,7 @@ const StaffNotes = ({
                             <div className="bg-[#f8fcf9] dark:bg-[#102216] p-3 rounded-lg border border-[#e7f3eb] dark:border-[#2a4034]">
                                 <div className="flex justify-between items-center mb-1">
                                     <p className="text-s font-medium text-text-main-light dark:text-text-main-dark">
-                                        {note.staff?.memberDetails?.firstName
-                                            ? `${note.staff.memberDetails.firstName} ${note.staff.memberDetails.lastName}`
-                                            : note.staff?.user?.name ||
-                                              "Unknown Staff"}
+                                        {note.staff?.user?.name}
                                     </p>
                                     <p className="text-[12px] text-text-sub-light">
                                         <span>

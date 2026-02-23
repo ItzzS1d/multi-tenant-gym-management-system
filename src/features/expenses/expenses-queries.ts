@@ -67,11 +67,13 @@ export const getExpensesStats = cache(async () => {
     const topCategoryAmount = topCategoryAgg[0]?._sum.amount ?? 0;
 
     return {
-      revenue,
-      expenses,
-      profit,
-      topCategory,
-      topCategoryAmount,
+      stats: {
+        revenue,
+        expenses,
+        profit,
+        topCategory: topCategory ?? "N/A",
+        topCategoryAmount,
+      },
     };
   } catch (error) {
     console.error(error);

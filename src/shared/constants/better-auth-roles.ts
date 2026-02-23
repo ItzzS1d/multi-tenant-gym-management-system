@@ -9,6 +9,7 @@ const statement = {
     expense: ["create", "update", "delete", "read"], // Added expenses
     attendance: ["create", "update", "delete", "read"],
     notes: ["create", "update", "delete", "read"],
+    invitation: ["cancel", "create", "read", "update", "delete"],
 } as const;
 
 export const ac = createAccessControl(statement);
@@ -20,7 +21,7 @@ export const owner = ac.newRole({
     plan: ["create", "update", "delete", "read"], // Owner can manage plans
     expense: ["create", "update", "delete", "read"], // Owner can manage expenses
     attendance: ["create", "update", "delete", "read"], // Owner can manage attendance
-    invitation: ["cancel", "create"],
+    invitation: ["cancel", "create", "read", "update", "delete"],
     notes: ["create", "update", "delete", "read"],
 });
 
@@ -30,7 +31,7 @@ export const admin = ac.newRole({
     plan: ["create", "update", "read"], // Admin can create/update plans
     expense: ["create", "update", "read"], // Admin can manage expenses
     attendance: ["create", "update", "delete", "read"], // Admin can manage attendance
-    invitation: ["cancel", "create"],
+    invitation: ["cancel", "create", "read", "update", "delete"],
     notes: ["create", "update", "delete", "read"],
 });
 
@@ -41,6 +42,7 @@ export const trainer = ac.newRole({
     expense: [], // Trainers cannot manage expenses
     attendance: ["create", "update", "delete", "read"], // Trainers can manage attendance
     notes: ["create", "update", "delete", "read"],
+    invitation: [],
 });
 
 export const member = ac.newRole({

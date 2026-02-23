@@ -1,28 +1,44 @@
-import { Suspense } from "react";
-import StatsCard from "./stats-card";
+import { use } from "react";
 import { StatsGrid } from "./stats-card-grid";
-import StatsDataUnwrapper from "./stats-data-unwrapper";
-import { StatsConfigItem } from "@/app/s/[subdomain]/(main)/members/page";
+import StatsCard from "./stats-card";
 
+export type StatsConfig = {
+    title?: string;
+    icon: React.ReactNode;
+    description?: string;
+};
 type StatsSectionProps<T extends { stats: Record<string, string | number> }> = {
     promise: Promise<T>;
-    items: StatsConfigItem[];
+    config: Record<string, StatsConfig>;
+    gridCount?: number;
 };
+
+const formatTitle = (key: string) =>
+    key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
 
 export function StatsSection<
     T extends { stats: Record<string, string | number> },
->({ promise, items }: StatsSectionProps<T>) {
+>({ promise, config, gridCount }: StatsSectionProps<T>) {
+    const data = use(promise);
+
     return (
-        <Suspense
-            fallback={
-                <StatsGrid>
-                    {items.map((item, i) => (
-                        <StatsCard key={i} {...item} isLoading />
-                    ))}
-                </StatsGrid>
-            }
-        >
-            <StatsDataUnwrapper promise={promise} items={items} />
-        </Suspense>
+        <StatsGrid gridCount={gridCount}>
+            {Object.entries(config).map(([key, config]) => {
+                const value = data.stats[key] ?? 0;
+
+                return (
+                    <StatsCard
+                        key={key}
+                        status="success"
+                        data={{
+                            title: config.title || formatTitle(key),
+                            icon: config.icon,
+                            value: value,
+                            description: config.description,
+                        }}
+                    />
+                );
+            })}
+        </StatsGrid>
     );
 }

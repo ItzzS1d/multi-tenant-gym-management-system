@@ -2,6 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { NextRequest } from "next/server";
 import { twMerge } from "tailwind-merge";
 import { format } from "date-fns";
+import { Route } from "next";
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -9,10 +10,34 @@ export function cn(...inputs: ClassValue[]) {
 
 export const protocol =
     process.env.NODE_ENV === "production" ? "https" : "http";
-export const rootDomain = process.env.BETTER_AUTH_DOMAIN || "localhost:3000";
+export const rootDomain =
+    process.env.NEXT_PUBLIC_BETTER_AUTH_DOMAIN || "localhost:3000";
 
-export const constructUrl = (pathName: string, subDomain: string) => {
-    return `${protocol}://${subDomain}.${rootDomain}${pathName}`;
+export const rootDomainWithProtocolClient =
+    process.env.NODE_ENV === "development"
+        ? `${protocol}://${process.env.NEXT_PUBLIC_BETTER_AUTH_DOMAIN}:3000`
+        : `${protocol}://${process.env.NEXT_PUBLIC_BETTER_AUTH_DOMAIN!}`;
+
+export const constructUrlClient = (pathName: string, subDomain: string) => {
+    return `${protocol}://${subDomain}.${rootDomainWithProtocolClient}${pathName}` as Route;
+};
+export const normalizeName = (
+    name: string,
+    type: "first" | "last" | "full",
+) => {
+    const [firstName, lastName] = name.split(" ");
+
+    switch (type) {
+        case "first":
+            return firstName;
+        case "last":
+            return lastName;
+        case "full":
+            return `${firstName} ${lastName}`;
+    }
+};
+export const capitalize = (str: string) => {
+    return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
 export function extractSubdomain(request: NextRequest): string | null {
@@ -117,15 +142,20 @@ export const formatCompactNumberCurrency = (value: number) => {
         compactDisplay: "short",
     }).format(value);
 };
+export function formatMinutes(totalMinutes: number) {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
 
-export function formatMonthYear(date: Date | string | number) {
-    return format(date, "MMMM yyyy");
+    if (hours === 0) return `${minutes}m`;
+    if (minutes === 0) return `${hours}h`;
+
+    return `${hours}h ${minutes}m`;
 }
-
-export function formatISODate(date: Date | string | number) {
-    return format(date, "yyyy-MM-dd");
-}
-
-export function formatDateWithOrdinal(date: Date | string | number) {
-    return format(date, "MMM do");
+export const getInitials = (name: string) => {
+    return name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
 }

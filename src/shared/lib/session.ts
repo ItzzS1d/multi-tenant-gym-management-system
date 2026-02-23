@@ -73,15 +73,20 @@ export const requirePermissionAndReturnUser = cache(
             },
             select: {
                 id: true,
-                userId: true,
                 gymId: true,
                 isActive: true,
                 role: true,
-                memberDetails: {
+                gym: {
                     select: {
+                        name: true,
+                        logo: true,
+                    },
+                },
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
                         email: true,
-                        firstName: true,
-                        lastName: true,
                     },
                 },
             },
@@ -98,13 +103,6 @@ export const requirePermissionAndReturnUser = cache(
         return {
             ...member,
             organizationId: member.gymId,
-            memberDetails: {
-                ...member.memberDetails,
-                name:
-                    member.memberDetails?.firstName +
-                    " " +
-                    member.memberDetails?.lastName,
-            },
         };
     },
 );

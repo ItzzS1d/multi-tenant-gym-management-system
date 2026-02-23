@@ -99,24 +99,28 @@ export const datas = [
     },
 ];
 
-interface DataTableProps<TData, TValue> {
-    columns: ColumnDef<TData, TValue>[];
-    attendancePromise: ReturnType<typeof getAttendanceAnalytics>;
+type AttendanceRecord = Awaited<
+    ReturnType<typeof getAttendanceAnalytics>
+>["records"][number];
+
+interface DataTableProps {
+    columns: ColumnDef<AttendanceRecord>[];
+    attendancePromise: Promise<AttendanceRecord[]>;
     availableYears: number[];
     month?: number;
     year?: number;
 }
-function AttendanceLogTable<TData, TValue>({
+function AttendanceLogTable({
     attendancePromise,
     columns,
     availableYears,
     month,
     year,
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps) {
     const tableData = use(attendancePromise);
     const [columnFilter, setColumnFilter] = useState<ColumnFiltersState>([]);
     const table = useReactTable({
-        data: tableData.records,
+        data: tableData,
         columns: columns,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
@@ -178,7 +182,7 @@ function AttendanceLogTable<TData, TValue>({
             <div className="flex justify-between items-center   py-2.5 shadow px-4 rounded-t-xl border-[#e7f3eb]">
                 <h3 className="text-lg font-semibold flex items-center  text-primary">
                     <CalendarDays className="mr-2" aria-hidden />
-                    <span className="text-black">Attendance Log</span>
+                    <span className="text-black">Attendance </span>
                 </h3>
                 <div className="flex gap-2 text-xs items-center">
                     <Select
@@ -228,9 +232,12 @@ function AttendanceLogTable<TData, TValue>({
                 </thead>
 
                 <tbody className="divide-y divide-[#e7f3eb]  ">
-                    {tableData.records.length === 0 ? (
-                        <tr className="bg-transparent hover:bg-transparent">
-                            <td colSpan={columns.length} className="p-0">
+                    {tableData.length === 0 ? (
+                        <tr>
+                            <td
+                                colSpan={columns.length}
+                                className="h-24 text-center"
+                            >
                                 <EmptyAttendanceTableState
                                     title="No Attendance Records"
                                     description="No attendance records found for this period."
@@ -239,8 +246,11 @@ function AttendanceLogTable<TData, TValue>({
                             </td>
                         </tr>
                     ) : table.getRowModel().rows.length === 0 ? (
-                        <tr className="bg-transparent hover:bg-transparent">
-                            <td colSpan={columns.length} className="p-0">
+                        <tr>
+                            <td
+                                colSpan={columns.length}
+                                className="h-24 text-center"
+                            >
                                 <EmptyAttendanceTableState
                                     title="No results found"
                                     description="No attendance records match your search criteria."
@@ -275,7 +285,7 @@ function AttendanceLogTable<TData, TValue>({
             <div className="flex justify-between items-center  p-4 text-xs  border-t bg-[#f8fcf9]">
                 <p className="text-[10px] md:text-sm text-[#4c9a66] dark:text-text-sub-dark  px-2 py-1 rounded whitespace-nowrap">
                     Showing {table.getRowModel().rows.length} of{" "}
-                    {tableData.records.length} check-ins{" "}
+                    {tableData.length} check-ins{" "}
                     {currentLabel && `in ${currentLabel}`}
                 </p>
                 <div className="grid grid-cols-2 gap-3">

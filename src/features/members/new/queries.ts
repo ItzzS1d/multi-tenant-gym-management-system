@@ -21,13 +21,19 @@ export const getMemberOverViewDetails = cache(async (memberId: string) => {
             "read",
         ]);
 
-        return await prisma.gymMember.findFirst({
+        return await prisma.gymMember.findUniqueOrThrow({
             where: {
                 id: memberId,
                 gymId: currentUser.organizationId,
-                role: "member",
             },
             select: {
+                user: {
+                    select: {
+                        name: true,
+                        email: true,
+                        phone: true,
+                    },
+                },
                 isActive: true,
                 role: true,
                 id: true,
@@ -74,10 +80,6 @@ export const getMemberOverViewDetails = cache(async (memberId: string) => {
                 memberDetails: {
                     select: {
                         id: true,
-                        firstName: true,
-                        lastName: true,
-                        email: true,
-                        phone: true,
                         image: true,
                         dob: true,
                         emergencyName: true,
@@ -106,14 +108,14 @@ export const getAttendanceAnalytics = cache(
         month?: number; // 1-12
         year?: number;
     }) => {
-        const organization = await requirePermissionAndReturnUser(
+        const currentStaff = await requirePermissionAndReturnUser(
             "attendance",
             ["read"],
         );
 
         // 1. Fetch member join date for boundary safety
         const member = await prisma.gymMember.findUnique({
-            where: { id: memberId, gymId: organization.id },
+            where: { id: memberId, gymId: currentStaff.organizationId },
             select: { createdAt: true },
         });
 
@@ -128,16 +130,20 @@ export const getAttendanceAnalytics = cache(
         let startDate = startOfMonth(referenceDate);
         const endDate = endOfMonth(referenceDate);
 
-        // Guard: If the selected month is when they joined, start from their join day
+        // If the selected month is when they joined, start from their join day
         if (isBefore(startDate, joinDate) && isAfter(endDate, joinDate)) {
             startDate = startOfDay(joinDate);
         }
 
-        // Guard: If the entire selected month is BEFORE they joined, return empty
+        // If the entire selected month is BEFORE they joined, return empty
         if (isAfter(startDate, new Date()) || isBefore(endDate, joinDate)) {
             return {
                 records: [],
-                stats: null,
+                stats: {
+                    totalVisits: 0,
+                    avgDuration: 0,
+                    peakHourLabel: "N/A",
+                },
                 message: "No records for this period",
             };
         }
@@ -145,7 +151,7 @@ export const getAttendanceAnalytics = cache(
         const attendanceRecords = await prisma.attendance.findMany({
             where: {
                 gymMemberId: memberId,
-                gymId: organization.organizationId,
+                gymId: currentStaff.organizationId,
                 attendanceDate: {
                     gte: startDate,
                     lte: endDate,
@@ -194,13 +200,10 @@ export const getAttendanceAnalytics = cache(
                 avgDuration:
                     stats.completedSessions > 0
                         ? Math.round(
-                            stats.totalMinutes / stats.completedSessions,
-                        )
+                              stats.totalMinutes / stats.completedSessions,
+                          )
                         : 0,
-                peakHourRaw: peakHourIndex,
                 peakHourLabel: formattedPeakHour,
-                hourBuckets: stats.hourBuckets,
-                dateRange: { start: startDate, end: endDate },
             },
         };
     },
@@ -227,12 +230,6 @@ export const getMemberNotes = cache(async (memberId: string) => {
                                 name: true,
                             },
                         },
-                        memberDetails: {
-                            select: {
-                                firstName: true,
-                                lastName: true,
-                            },
-                        },
                     },
                 },
             },
@@ -243,14 +240,68 @@ export const getMemberNotes = cache(async (memberId: string) => {
     }
 });
 
+export const getPlansList = cache(async () => {
+    try {
+        const currentMember = await requirePermissionAndReturnUser("plan", [
+            "read",
+        ]);
+        return await prisma.plan.findMany({
+            where: {
+                gymId: currentMember.organizationId,
+                isActive: true,
+            },
+            select: {
+                id: true,
+                name: true,
+                price: true,
+                durationInDays: true,
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+        });
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+});
+
+export const getTrainersList = cache(async () => {
+    try {
+        const currentStaff = await requirePermissionAndReturnUser("staff", [
+            "read",
+        ]);
+        return await prisma.gymMember.findMany({
+            where: {
+                gymId: currentStaff.organizationId,
+                isActive: true,
+                role: "trainer",
+            },
+            select: {
+                id: true,
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        image: true,
+                    },
+                },
+            },
+        });
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+});
+
 export const getMemberActivePlanDetails = cache(async (memberId: string) => {
     try {
-        const organization = await requirePermissionAndReturnUser("member", [
+        const currentStaff = await requirePermissionAndReturnUser("member", [
             "read",
         ]);
         return await prisma.memberPlan.findFirst({
             where: {
-                gymId: organization.id,
+                gymId: currentStaff.organizationId,
                 gymMemberId: memberId,
                 status: "ACTIVE",
             },
@@ -275,54 +326,14 @@ export const getMemberActivePlanDetails = cache(async (memberId: string) => {
         throw error;
     }
 });
-export const getMemberPaymentHistoryDetails = cache(
-    async (memberId: string) => {
-        try {
-            const organization = await requirePermissionAndReturnUser(
-                "member",
-                ["read"],
-            );
-            return await prisma.memberPlan.findMany({
-                where: {
-                    gymId: organization.id,
-                    gymMemberId: memberId,
-                },
-                select: {
-                    payments: {
-                        select: {
-                            paymentReceivedDate: true,
-                            method: true,
-                            amountPaid: true,
-                            memberPlan: {
-                                select: {
-                                    plan: {
-                                        select: {
-                                            name: true,
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                        orderBy: {
-                            paymentReceivedDate: "desc",
-                        },
-                    },
-                },
-            });
-        } catch (error) {
-            console.error(error);
-            throw error;
-        }
-    },
-);
+
 export const getMemberAttendanceYears = cache(async (memberId: string) => {
     try {
-        const organization = await requirePermissionAndReturnUser(
-            "member",
-            ["read"],
-        )
+        const currentStaff = await requirePermissionAndReturnUser("member", [
+            "read",
+        ]);
         const member = await prisma.gymMember.findUnique({
-            where: { id: memberId, gymId: organization.id },
+            where: { id: memberId, gymId: currentStaff.organizationId },
             select: { createdAt: true },
         });
 
@@ -339,59 +350,6 @@ export const getMemberAttendanceYears = cache(async (memberId: string) => {
         return {
             availableYears,
         };
-    } catch (error) {
-        console.error(error);
-        throw error;
-    }
-});
-
-export const getTrainersList = cache(async () => {
-    try {
-        const currentStaff = await requirePermissionAndReturnUser("staff", ["read"])
-        return await prisma.gymMember.findMany({
-            where: {
-                gymId: currentStaff.organizationId,
-                isActive: true,
-                role: "trainer",
-            },
-            select: {
-                id: true,
-                memberDetails: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                        image: true,
-                    },
-                },
-            },
-        });
-    } catch (error) {
-        console.error(error);
-        throw error;
-    }
-});
-
-export const getPlansList = cache(async () => {
-    try {
-        const currentMember = await requirePermissionAndReturnUser("plan", [
-            "read",
-        ]);
-        return await prisma.plan.findMany({
-            where: {
-                gymId: currentMember.organizationId,
-                isActive: true,
-            },
-            select: {
-                id: true,
-                name: true,
-                price: true,
-                durationInDays: true,
-            },
-            orderBy: {
-                createdAt: "desc",
-            },
-        });
     } catch (error) {
         console.error(error);
         throw error;

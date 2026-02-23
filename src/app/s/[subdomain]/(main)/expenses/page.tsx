@@ -10,8 +10,8 @@ import {
 } from "@/features/expenses/expenses-queries";
 import TableSkeleton from "@/shared/components/table/table-skeleton";
 import React, { Suspense } from "react";
-import StatsCardSkeleton from "@/shared/components/stats-card-skeleton";
-import ExpnesesStats from "@/features/expenses/components/expense-stats";
+import { StatsSection } from "@/shared/components/stats/stats-section";
+import { StatsCardsSkeleton } from "@/shared/components/stats/stats-card-skeleton";
 import MonthlyTrendLineChart from "@/features/expenses/components/charts/montly-trend-line-chart";
 import ExpenseCategoryPieChart from "@/features/expenses/components/charts/expenses-pie-chart";
 import FixedVsVariableBarChart from "@/features/expenses/components/charts/fixed-variable-chart";
@@ -23,6 +23,33 @@ import { RevenueVsExpensesTrendSkeleton } from "@/features/expenses/components/s
 import { RevenueVsExpensesBarChartSkeleton } from "@/features/expenses/components/skeletons/revenue-vs-expenses-skeleton";
 import { FixedVsVariableChartSkeleton } from "@/features/expenses/components/skeletons/fixed-vs-variable-skeleton";
 import ExpensesTable from "@/features/expenses/components/tables/expenses-table";
+import { Banknote, TrendingUp, PiggyBank, Tag } from "lucide-react";
+
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "Expenses",
+    description: "Track and manage your gym's expenses and recurring bills.",
+};
+
+const EXPENSES_STATS_CONFIG = {
+    revenue: {
+        icon: <Banknote size={14} />,
+        description: "Revenue of current month",
+    },
+    expenses: {
+        icon: <TrendingUp size={14} />,
+        description: "Expenses of current month",
+    },
+    profit: {
+        icon: <PiggyBank size={14} />,
+        description: "Profit of current month",
+    },
+    topCategory: {
+        icon: <Tag size={14} />,
+        description: "Top spent category",
+    },
+};
 
 const Expenses = () => {
     const expensesListPromise = getExpenesList();
@@ -35,16 +62,12 @@ const Expenses = () => {
 
     return (
         <main className="space-y-3">
-            <Suspense
-                fallback={
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        {Array.from({ length: 3 }).map((_, i) => (
-                            <StatsCardSkeleton key={i} />
-                        ))}
-                    </div>
-                }
-            >
-                <ExpnesesStats statsPromise={expensesStatsPromise} />
+            <Suspense fallback={<StatsCardsSkeleton length={4} />}>
+                <StatsSection
+                    config={EXPENSES_STATS_CONFIG}
+                    promise={expensesStatsPromise}
+                    gridCount={4}
+                />
             </Suspense>
 
             <Suspense fallback={<RevenueVsExpensesTrendSkeleton />}>

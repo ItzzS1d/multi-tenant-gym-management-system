@@ -23,7 +23,7 @@ import {
 import { use, useState } from "react";
 import CreateButton from "@/shared/components/create-button";
 import { ExpenseTableColumns } from "./expenses-table-columns";
-import FilterTableInput from "@/shared/components/dialog/table-filter-input";
+import FilterTableInput from "@/shared/components/table/table-filter-input";
 import { rankItem } from "@tanstack/match-sorter-utils";
 import {
     Combobox,

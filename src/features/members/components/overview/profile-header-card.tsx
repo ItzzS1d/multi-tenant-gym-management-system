@@ -3,8 +3,7 @@ import { getMemberOverViewDetails } from "../../new/queries";
 import { use } from "react";
 import { Check, Crown, EllipsisVertical, Pencil } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-
-// ... existing imports
+import { normalizeName } from "@/shared/lib/utils";
 
 const ProfileHeaderCard = ({
     memberOverviewPromise,
@@ -12,9 +11,10 @@ const ProfileHeaderCard = ({
     memberOverviewPromise: ReturnType<typeof getMemberOverViewDetails>;
 }) => {
     const overView = use(memberOverviewPromise);
-    const member = overView?.memberDetails;
-    const activePlan = overView?.memberPlans?.[0];
-    const lastCheckIn = overView?.attendanceEntries?.[0]?.checkInAt;
+    const user = overView.user;
+    const member = overView.memberDetails;
+    const activePlan = overView.memberPlans?.[0];
+    const lastCheckIn = overView.attendanceEntries?.[0]?.checkInAt;
 
     return (
         <section className="bg-surface-light dark:bg-surface-dark rounded-xl p-4 md:p-6 shadow-sm border border-[#e7f3eb] dark:border-[#2a4034]">
@@ -23,14 +23,15 @@ const ProfileHeaderCard = ({
                     <div className="relative group cursor-pointer shrink-0">
                         <div
                             className="bg-center bg-no-repeat bg-cover rounded-full h-28 w-28 border-4 border-[#e7f3eb] dark:border-[#2a4034] shadow-sm"
-                            data-alt={`${member?.firstName}'s profile picture`}
+                            data-alt={`${user.name}'s profile picture`}
                             style={{
-                                backgroundImage: `url("${member?.image ||
+                                backgroundImage: `url("${
+                                    member?.image ||
                                     "https://ui-avatars.com/api/?name=" +
-                                    member?.firstName +
-                                    "+" +
-                                    member?.lastName
-                                    }")`,
+                                        normalizeName(user.name, "first") +
+                                        "+" +
+                                        normalizeName(user.name, "last")
+                                }")`,
                             }}
                         ></div>
                         {/*// TODO: Use nextjs image instead of bg image */}
@@ -42,15 +43,18 @@ const ProfileHeaderCard = ({
                     <div className="flex flex-col gap-1.5 pt-1 w-full">
                         <div className="flex flex-col md:flex-row items-center gap-2 flex-wrap justify-center sm:justify-start">
                             <h1 className="text-xl md:text-3xl font-semibold text-text-main-light dark:text-text-main-dark">
-                                {member?.firstName} {member?.lastName}
+                                {user.name}
                             </h1>
                             <span
-                                className={`px-2.5 py-0.5 rounded-full ${overView?.isActive
-                                    ? "bg-primary/20 text-emerald-900 dark:text-primary border-primary/20"
-                                    : "bg-red-100 text-red-800 border-red-200"
-                                    }  text-[10px] md:text-xs font-bold uppercase tracking-wide border `}
+                                className={`px-2.5 py-0.5 rounded-full ${
+                                    overView?.isActive
+                                        ? "bg-primary/20 text-emerald-900 dark:text-primary border-primary/20"
+                                        : "bg-red-100 text-red-800 border-red-200"
+                                }  text-[10px] md:text-xs font-bold uppercase tracking-wide border `}
                             >
-                                {overView?.isActive ? "Active Member" : "Inactive"}
+                                {overView?.isActive
+                                    ? "Active Member"
+                                    : "Inactive"}
                             </span>
                         </div>
                         <p className="text-primary text-sm md:text-base font-medium flex items-center gap-1 justify-center sm:justify-start">
@@ -61,17 +65,20 @@ const ProfileHeaderCard = ({
                             <span className="text-[10px] md:text-xs text-[#4c9a66] dark:text-text-sub-dark bg-[#e7f3eb] px-2 py-1 rounded whitespace-nowrap">
                                 Joined:{" "}
                                 {member?.createdAt
-                                    ? format(new Date(member.createdAt), "MMM d, yyyy")
+                                    ? format(
+                                          new Date(member.createdAt),
+                                          "MMM d, yyyy",
+                                      )
                                     : "N/A"}
                             </span>
                             <span className="text-[10px] md:text-xs text-[#4c9a66] dark:text-text-sub-dark bg-[#e7f3eb] px-2 py-1 rounded whitespace-nowrap">
                                 Last Visit:{" "}
                                 {lastCheckIn
                                     ? formatDistance(
-                                        new Date(lastCheckIn),
-                                        new Date(),
-                                        { addSuffix: true }
-                                    )
+                                          new Date(lastCheckIn),
+                                          new Date(),
+                                          { addSuffix: true },
+                                      )
                                     : "Never"}
                             </span>
                         </div>

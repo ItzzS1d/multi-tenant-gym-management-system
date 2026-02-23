@@ -67,7 +67,7 @@ type ComboBoxInputProps<T extends FieldValues> = BaseFormInputProps<T> & {
 
 type TextareaInputProps<T extends FieldValues> = BaseFormInputProps<T> & {
     type: "textarea";
-    rows?: number
+    rows?: number;
 };
 
 type FormInputProps<T extends FieldValues> =
@@ -132,7 +132,6 @@ function FormInput<T extends FieldValues>(props: FormInputProps<T>) {
                     }
 
                     if (props.type === "select") {
-
                         return (
                             <Field
                                 data-invalid={fieldState.invalid}
@@ -159,6 +158,7 @@ function FormInput<T extends FieldValues>(props: FormInputProps<T>) {
                                     </SelectTrigger>
                                     <SelectContent
                                         className={cn("py-1", props.className)}
+                                        side="bottom"
                                     >
                                         {props.options?.map((option) => (
                                             <SelectItem

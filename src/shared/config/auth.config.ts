@@ -26,10 +26,16 @@ import { getActiveOrganization } from "@/shared/lib/tenant";
 import { setCookie } from "../lib/cookie-util";
 import { APIError } from "better-auth";
 import { protocol } from "@/shared/lib/utils";
-import { ALL_EMAIL_DOMAINS } from "../lib/server-utils";
+import { ALL_EMAIL_DOMAINS, rootDomain } from "../lib/server-utils";
 
-const domain = process.env.NODE_ENV === "development" ? `${process.env.BETTER_AUTH_DOMAIN}:3000` : process.env.BETTER_AUTH_DOMAIN
-const trustedOrigins = [`${protocol}://*.${domain}`, `${protocol}://${domain}`];
+// const rootDomain =
+//     process.env.NODE_ENV === "development"
+//         ? `${process.env.BETTER_AUTH_DOMAIN}:3000`
+//         : process.env.BETTER_AUTH_DOMAIN;
+const trustedOrigins = [
+    `${protocol}://${rootDomain}`,
+    `${protocol}://*.${rootDomain}`,
+];
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
@@ -45,7 +51,7 @@ export const auth = betterAuth({
         organization({
             requireEmailVerificationOnInvitation: false,
             async sendInvitationEmail({ id, email, inviter, organization }) {
-                const inviteLink = `${protocol}://${domain}/staff/accept-invitation/${id}`;
+                const inviteLink = `${protocol}://${rootDomain}/staff/accept-invitation/${id}`;
                 let primaryColor;
                 if (organization.metadata) {
                     try {
@@ -54,17 +60,18 @@ export const auth = betterAuth({
                                 ? JSON.parse(organization.metadata)
                                 : organization.metadata;
                         primaryColor = meta.primaryColor;
-                    } catch (e) { }
+                    } catch (e) {}
                 }
 
-                sendInvitationEmail({
-                    email,
-                    inviteLink,
-                    invitedByEmail: inviter.user.email,
-                    gymName: organization.name,
-                    invitedByUsername: inviter.user.name,
-                    primaryColor,
-                });
+                // sendInvitationEmail({
+                //     email,
+                //     inviteLink,
+                //     invitedByEmail: inviter.user.email,
+                //     gymName: organization.name,
+                //     invitedByUsername: inviter.user.name,
+                //     primaryColor,
+                // });
+                console.info(inviteLink);
             },
             ac,
             roles: {
@@ -140,10 +147,10 @@ export const auth = betterAuth({
                 },
             },
         }),
-        haveIBeenPwned({
-            customPasswordCompromisedMessage:
-                "We have detected that your password has been compromised in a data breach. Please choose a stronger password.",
-        }),
+        // haveIBeenPwned({
+        //     customPasswordCompromisedMessage:
+        //         "We have detected that your password has been compromised in a data breach. Please choose a stronger password.",
+        // }),
         nextCookies(),
     ],
 
@@ -197,8 +204,8 @@ export const auth = betterAuth({
             enabled: process.env.NODE_ENV !== "development",
             domain:
                 process.env.NODE_ENV === "development"
-                    ? ".localhost"
-                    : `.${domain}`,
+                    ? undefined
+                    : `.${rootDomain}`,
         },
     },
     user: {
@@ -232,11 +239,11 @@ export const auth = betterAuth({
                 const isAllowed = ALL_EMAIL_DOMAINS.some((domain) =>
                     email.endsWith(domain.toLowerCase()),
                 );
-                if (!isAllowed) {
-                    throw new APIError("BAD_REQUEST", {
-                        message: "Email address not allowed",
-                    });
-                }
+                // if (!isAllowed) {
+                //     throw new APIError("BAD_REQUEST", {
+                //         message: "Email address not allowed",
+                //     });
+                // }
             }
             if (ctx.path === "/sign-in/email") {
                 const { email } = ctx.body;
@@ -289,7 +296,6 @@ export const auth = betterAuth({
     session: {
         cookieCache: {
             enabled: true,
-            refreshCache: true,
         },
     },
 });
