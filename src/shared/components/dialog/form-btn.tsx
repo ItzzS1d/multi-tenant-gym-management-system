@@ -22,7 +22,7 @@ const FormButtons = ({
 }: ButtonProps) => {
     const { closeDialog } = useDialog();
     return (
-        <div className="flex justify-end items-center gap-3 ">
+        <div className="flex items-center gap-3  border-t shadow py-2 px-4 justify-end sticky inset-0">
             <Button variant={"outline"} onClick={closeDialog}>
                 Cancel
             </Button>

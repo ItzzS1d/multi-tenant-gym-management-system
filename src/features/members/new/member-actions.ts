@@ -3,8 +3,14 @@ import { requirePermissionAndReturnUser } from "@/shared/lib/session";
 import {
     CreateMember,
     createMemberSchema,
+    RenewMember,
+    renewMemberSchema,
     StaffNotes,
     staffNotesSchema,
+    UpdateMember,
+    updateMemberSchema,
+    AssignTrainer,
+    assignTrainerSchema,
 } from "../member-validations";
 import prisma from "@/shared/config/prisma.config";
 import { ValidationError } from "@/shared/lib/error-classes";
@@ -14,6 +20,68 @@ import { revalidatePath } from "next/cache";
 import { v2 as cloudinary } from "cloudinary";
 import { createAuditLog, getAuditMetadata } from "@/shared/lib/server-utils";
 import { addDays, endOfDay } from "date-fns";
+
+import { normalizeName } from "@/shared/lib/utils";
+import { Role } from "../../../../prisma/generated/prisma/enums";
+// getTrainersList action wrapper removed, use API route instead
+
+export const getMemberForEdit = async (memberId: string) => {
+    try {
+        const currentStaff = await requirePermissionAndReturnUser("member", [
+            "read",
+        ]);
+
+        const member = await prisma.gymMember.findUnique({
+            where: {
+                id: memberId,
+                gymId: currentStaff.organizationId,
+            },
+            select: {
+                id: true,
+                assignedTrainerId: true,
+                user: {
+                    select: {
+                        name: true,
+                        email: true,
+                        phone: true,
+                    },
+                },
+                memberDetails: {
+                    select: {
+                        gender: true,
+                        address: true,
+                        emergencyName: true,
+                        emergencyPhone: true,
+                        relationship: true,
+                        dob: true,
+                        image: true,
+                    },
+                },
+            },
+        });
+
+        if (!member) return null;
+
+        return {
+            id: member.id,
+            firstName: normalizeName(member.user.name, "first"),
+            lastName: normalizeName(member.user.name, "last"),
+            email: member.user.email,
+            phone: member.user.phone,
+            gender: member.memberDetails?.gender,
+            dob: member.memberDetails?.dob,
+            address: member.memberDetails?.address,
+            emergencyName: member.memberDetails?.emergencyName,
+            emergencyPhone: member.memberDetails?.emergencyPhone,
+            relationship: member.memberDetails?.relationship,
+            assignedTrainerId: member.assignedTrainerId,
+            image: member.memberDetails?.image,
+        };
+    } catch (error) {
+        console.error("Error in getMemberForEdit:", error);
+        return null;
+    }
+};
 
 export const addNewNoteAction = async (
     formData: Omit<StaffNotes, "id">,
@@ -205,6 +273,333 @@ export const createNewMemberAction = async (
         }
         console.error("Action Error:", error);
 
+        return handleActionError(error);
+    }
+};
+export const renewMembershipAction = async (
+    formData: RenewMember,
+): Promise<ActionResponse<void>> => {
+    const { success, data } = renewMemberSchema.safeParse(formData);
+
+    try {
+        if (!success) throw new ValidationError("Invalid data");
+        const currentStaff = await requirePermissionAndReturnUser("member", [
+            "update",
+        ]);
+
+        const metadata = await getAuditMetadata();
+
+        await prisma.$transaction(async (tx) => {
+            const plan = await tx.plan.findFirst({
+                where: {
+                    id: data.membershipPlanId,
+                    gymId: currentStaff.organizationId,
+                    isActive: true,
+                },
+            });
+
+            if (!plan) throw new Error("Invalid plan");
+
+            const expirationDate = addDays(data.startDate, plan.durationInDays);
+            const expirationDateEndOfDay = endOfDay(expirationDate);
+
+            // Deactivate existing active plans if
+            await tx.memberPlan.updateMany({
+                where: {
+                    gymMemberId: data.memberId,
+                    status: "ACTIVE",
+                },
+                data: {
+                    status: "EXPIRED",
+                },
+            });
+
+            const newPlan = await tx.memberPlan.create({
+                data: {
+                    gymId: currentStaff.organizationId,
+                    gymMemberId: data.memberId,
+                    planId: plan.id,
+                    startDate: data.startDate,
+                    endDate: expirationDateEndOfDay,
+                    status: "ACTIVE",
+                    planDurationSnapshot: plan.durationInDays,
+                    planNameSnapshot: plan.name,
+                    planPriceSnapshot: plan.price,
+                },
+            });
+
+            await tx.payment.create({
+                data: {
+                    amountPaid: data.amountPaid,
+                    gymId: currentStaff.organizationId,
+                    method: data.paymentMethod,
+                    gymMemberId: data.memberId,
+                    paymentReceivedDate: new Date(),
+                    memberPlanId: newPlan.id,
+                    notes: data.paymentNotes,
+                },
+            });
+
+            await createAuditLog(
+                {
+                    action: "UPDATE",
+                    actorEmail: currentStaff.user.email || "",
+                    actorName: currentStaff.user.name,
+                    entity: "MEMBER",
+                    status: "SUCCESS",
+                    entityId: data.memberId,
+                    actor: { connect: { id: currentStaff.id } },
+                    gym: { connect: { id: currentStaff.organizationId } },
+                },
+                tx,
+                metadata,
+            );
+        });
+
+        revalidatePath("/members");
+        return { type: "SUCCESS", message: "Membership renewed successfully" };
+    } catch (error) {
+        return handleActionError(error);
+    }
+};
+
+export const toggleMemberStatusAction = async ({
+    memberId,
+    isActive,
+}: {
+    memberId: string;
+    isActive: boolean;
+}): Promise<ActionResponse<void>> => {
+    try {
+        const currentStaff = await requirePermissionAndReturnUser("member", [
+            "update",
+        ]);
+
+        const metadata = await getAuditMetadata();
+
+        await prisma.$transaction(async (tx) => {
+            await tx.gymMember.update({
+                where: { id: memberId, gymId: currentStaff.organizationId },
+                data: { isActive },
+            });
+
+            await createAuditLog(
+                {
+                    action: "UPDATE",
+                    actorEmail: currentStaff.user.email || "",
+                    actorName: currentStaff.user.name,
+                    entity: "MEMBER",
+                    status: "SUCCESS",
+                    entityId: memberId,
+                    actor: { connect: { id: currentStaff.id } },
+                    gym: { connect: { id: currentStaff.organizationId } },
+                },
+                tx,
+                metadata,
+            );
+        });
+
+        revalidatePath("/members");
+        return {
+            type: "SUCCESS",
+            message: `Member ${isActive ? "activated" : "suspended"} successfully`,
+        };
+    } catch (error) {
+        return handleActionError(error);
+    }
+};
+export const updateMemberAction = async (
+    memberId: string,
+    formData: UpdateMember,
+): Promise<ActionResponse<void>> => {
+    const { success, data } = updateMemberSchema.safeParse(formData);
+
+    let uploadedPublicId: string | null = null;
+
+    try {
+        if (!success) throw new ValidationError("Invalid data");
+        const currentStaff = await requirePermissionAndReturnUser("member", [
+            "update",
+        ]);
+
+        const metadata = await getAuditMetadata();
+
+        await prisma.$transaction(async (tx) => {
+            const existingMember = await tx.gymMember.findUnique({
+                where: { id: memberId, gymId: currentStaff.organizationId },
+                include: { user: true, memberDetails: true },
+            });
+
+            if (!existingMember) throw new Error("Member not found");
+
+            let imageUrl = existingMember.memberDetails?.image;
+
+            if (data.image instanceof File) {
+                const uniqueSuffix =
+                    Date.now() + "-" + Math.round(Math.random() * 1e9);
+                const publicId =
+                    `${data.firstName}-${data.lastName}-${uniqueSuffix}`.toLowerCase();
+
+                const arrayBuffer = await data.image.arrayBuffer();
+                const buffer = Buffer.from(arrayBuffer);
+                const base64 = `data:${data.image.type};base64,${buffer.toString("base64")}`;
+
+                const imageUploadRes = await cloudinary.uploader.upload(
+                    base64,
+                    {
+                        folder: `gym/${currentStaff.organizationId}/members`,
+                        resource_type: "image",
+                        public_id: publicId,
+                        overwrite: true,
+                        transformation: [
+                            {
+                                width: 500,
+                                height: 500,
+                                crop: "fill",
+                                gravity: "face",
+                                quality: "auto",
+                                fetch_format: "auto",
+                            },
+                        ],
+                    },
+                );
+                imageUrl = imageUploadRes.secure_url;
+                uploadedPublicId = imageUploadRes.public_id;
+
+                // Optionally delete old image from cloudinary if it exists
+                if (existingMember.memberDetails?.image) {
+                    const oldPublicId = existingMember.memberDetails.image
+                        .split("/")
+                        .pop()
+                        ?.split(".")[0];
+                    if (oldPublicId && !oldPublicId.includes("default")) {
+                        // await cloudinary.uploader.destroy(oldPublicId);
+                    }
+                }
+            }
+
+            await tx.user.update({
+                where: { id: existingMember.userId },
+                data: {
+                    email: data.email,
+                    phone: data.phone,
+                    name: `${data.firstName} ${data.lastName}`,
+                },
+            });
+
+            await tx.gymMember.update({
+                where: { id: memberId },
+                data: {
+                    assignedTrainerId: data.assignedTrainerId,
+                    memberDetails: {
+                        update: {
+                            gender: data.gender,
+                            address: data.address,
+                            emergencyName: data.emergencyName,
+                            emergencyPhone: data.emergencyPhone,
+                            relationship: data.relationship,
+                            dob: data.dob,
+                            image: imageUrl,
+                        },
+                    },
+                },
+            });
+
+            await createAuditLog(
+                {
+                    action: "UPDATE",
+                    actorEmail: currentStaff.user.email || "",
+                    actorName: currentStaff.user.name,
+                    entity: "MEMBER",
+                    status: "SUCCESS",
+                    entityId: memberId,
+                    actor: { connect: { id: currentStaff.id } },
+                    gym: { connect: { id: currentStaff.organizationId } },
+                },
+                tx,
+                metadata,
+            );
+        });
+
+        revalidatePath("/members");
+        revalidatePath(`/members/${memberId}`);
+        return { type: "SUCCESS", message: "Member updated successfully" };
+    } catch (error) {
+        if (uploadedPublicId) {
+            await cloudinary.uploader.destroy(uploadedPublicId);
+        }
+        return handleActionError(error);
+    }
+};
+
+export const assignTrainerAction = async (
+    formData: AssignTrainer,
+): Promise<ActionResponse<void>> => {
+    const { success, data } = assignTrainerSchema.safeParse(formData);
+    try {
+        if (!success) throw new ValidationError("Invalid data");
+        const { memberId, trainerId } = data;
+        const currentStaff = await requirePermissionAndReturnUser("member", [
+            "update",
+        ]);
+
+        const metadata = await getAuditMetadata();
+
+        await prisma.$transaction(async (tx) => {
+            const members = await tx.gymMember.findMany({
+                where: {
+                    id: {
+                        in: [memberId, trainerId].filter(Boolean),
+                    },
+                    gymId: currentStaff.organizationId,
+                },
+            });
+
+            const targetMember = members.find((m) => m.id === memberId);
+
+            if (!targetMember)
+                throw new Error("Member not found in this organization");
+
+            if (targetMember.role !== "member")
+                throw new Error("Target record is not a member");
+
+            if (trainerId) {
+                const trainer = members.find((m) => m.id === trainerId);
+
+                if (!trainer)
+                    throw new Error(
+                        "The selected trainer record is invalid or from another gym",
+                    );
+
+                if (trainer.role !== "trainer")
+                    throw new Error("Selected user is not a trainer");
+            }
+
+            await tx.gymMember.update({
+                where: { id: memberId },
+                data: { assignedTrainerId: trainerId ?? null },
+            });
+
+            await createAuditLog(
+                {
+                    action: "UPDATE",
+                    actorEmail: currentStaff.user.email || "",
+                    actorName: currentStaff.user.name,
+                    entity: "MEMBER",
+                    status: "SUCCESS",
+                    entityId: memberId,
+                    actor: { connect: { id: currentStaff.id } },
+                    gym: { connect: { id: currentStaff.organizationId } },
+                },
+                tx,
+                metadata,
+            );
+        });
+
+        revalidatePath("/members");
+        revalidatePath(`/members/${memberId}`);
+        return { type: "SUCCESS", message: "Trainer assigned successfully" };
+    } catch (error) {
         return handleActionError(error);
     }
 };

@@ -115,3 +115,27 @@ export const getPlansDashboardData = cache(async () => {
         };
     }
 });
+
+export const getActivePlans = cache(async () => {
+    try {
+        const currentMember = await requirePermissionAndReturnUser("plan", [
+            "read",
+        ]);
+        return await prisma.plan.findMany({
+            where: {
+                gymId: currentMember.organizationId,
+                isActive: true
+            },
+            select: {
+                id: true,
+                name: true,
+                price: true,
+                durationInDays: true,
+            },
+            orderBy: { name: "asc" },
+        });
+    } catch (error) {
+        console.error("Error fetching active plans:", error);
+        return [];
+    }
+});

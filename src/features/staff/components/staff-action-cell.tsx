@@ -6,7 +6,13 @@ import {
     DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
 import { useDialog } from "@/shared/hooks/useDialog";
-import { Ellipsis, ReceiptText, Trash, TriangleAlert } from "lucide-react";
+import {
+    Ellipsis,
+    EllipsisVertical,
+    ReceiptText,
+    Trash,
+    TriangleAlert,
+} from "lucide-react";
 import { StaffTableColumnProps } from "./staff-table-columns";
 import { capitalize, normalizeName } from "@/shared/lib/utils";
 import { useActionHandler } from "@/shared/hooks/useActionhandler";
@@ -100,7 +106,7 @@ const StaffActionCell = ({ data }: { data: StaffTableColumnProps }) => {
             <DropdownMenuTrigger
                 render={
                     <Button variant="ghost">
-                        <Ellipsis />
+                        <EllipsisVertical />
                     </Button>
                 }
             />

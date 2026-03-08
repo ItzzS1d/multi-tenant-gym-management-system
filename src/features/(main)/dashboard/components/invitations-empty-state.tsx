@@ -1,7 +1,8 @@
 "use client";
 import { Button } from "@/shared/components/ui/button";
-import { Building2, Dumbbell, RefreshCw, Settings } from "lucide-react";
+import { Building2, Dumbbell } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 const InvitationEmptyState = () => {
     const router = useRouter();
@@ -30,7 +31,10 @@ const InvitationEmptyState = () => {
                     <Button
                         variant="ghost"
                         className="text-primary"
-                        onClick={router.refresh}
+                        onClick={() => {
+                            router.refresh();
+                            toast.success("Invites refreshed successfully");
+                        }}
                     >
                         Refresh to check any pending invites
                     </Button>
@@ -44,7 +48,7 @@ const InvitationEmptyState = () => {
 
                     <div className="p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
                         <div className="max-w-2xl">
-                            <h2 className="text-2xl md:text-3xl font-medium  mb-3">
+                            <h2 className="text-2xl md:text-3xl font-medium  mb-3 text-accent">
                                 Ready to launch your gym?
                             </h2>
 
@@ -59,6 +63,7 @@ const InvitationEmptyState = () => {
                             <Button
                                 className="w-full md:w-auto    p-5  flex items-center justify-center gap-2 text-accent "
                                 onClick={() => router.push("/onboarding")}
+                                size={"lg"}
                             >
                                 <Building2 size={28} />
                                 <span>Create New Gym</span>

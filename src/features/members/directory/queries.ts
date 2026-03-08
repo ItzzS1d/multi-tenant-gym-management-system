@@ -30,18 +30,24 @@ export const getMemberList = cache(async () => {
                 role: "member",
             },
             select: {
+                id: true,
+                isActive: true,
+                joinedOn: true,
                 user: {
                     select: {
                         name: true,
                         email: true,
                     },
                 },
-                id: true,
-                isActive: true,
-                joinedOn: true,
                 assignedTrainer: {
                     select: {
-                        name: true,
+                        id: true,
+                        user: {
+                            select: {
+                                name: true,
+                                email: true,
+                            },
+                        },
                     },
                 },
                 memberDetails: {
@@ -51,7 +57,7 @@ export const getMemberList = cache(async () => {
                     },
                 },
                 memberPlans: {
-                    orderBy: { endDate: "desc" }, // Get the most recent plan first
+                    orderBy: { endDate: "desc" },
                     take: 1,
                     select: {
                         id: true,
@@ -63,7 +69,7 @@ export const getMemberList = cache(async () => {
                                 id: true,
                                 name: true,
                                 price: true,
-                                durationInDays: true, // Fixed field name
+                                durationInDays: true,
                             },
                         },
                     },
@@ -73,7 +79,9 @@ export const getMemberList = cache(async () => {
 
         const stats = {
             totalMembers: members.length,
-            activeNow: members.filter((m) => m.isActive).length,
+            active: members.filter(
+                (m) => m.isActive && m.memberPlans[0]?.status === "ACTIVE",
+            ).length,
 
             newThisMonth: members.filter(
                 (m) =>
@@ -86,12 +94,27 @@ export const getMemberList = cache(async () => {
 
             expiringSoon: members.filter((m) => {
                 const activePlan = m.memberPlans[0];
+                const endDate = activePlan
+                    ? new Date(activePlan.endDate)
+                    : null;
                 return (
                     activePlan &&
-                    isWithinInterval(new Date(activePlan.endDate), {
+                    endDate &&
+                    isWithinInterval(endDate, {
                         start: todayStart,
                         end: sevenDaysFromNow,
                     })
+                );
+            }).length,
+
+            expired: members.filter((m) => {
+                const activePlan = m.memberPlans[0];
+                const endDate = activePlan
+                    ? new Date(activePlan.endDate)
+                    : null;
+                return (
+                    (activePlan && activePlan.status === "EXPIRED") ||
+                    (endDate && isBefore(endDate, todayStart))
                 );
             }).length,
         };
@@ -108,10 +131,10 @@ export const getMemberList = cache(async () => {
                 lastName: normalizeName(m.user.name, "last"),
                 joinedAt: m.joinedOn,
                 gender: m.memberDetails?.gender,
-                assignedTrainer:
-                    m.assignedTrainer?.name || "No Trainer assigned",
+                assignedTrainerName:
+                    m.assignedTrainer?.user.name || "No Trainer assigned",
+                assignedTrainerId: m.assignedTrainer?.id ?? null,
 
-                // Plan info (with safety checks)
                 planName: planDetails?.plan.name || "No Plan",
                 planDuration: planDetails?.plan.durationInDays || 0,
                 planPrice: planDetails?.plan.price || 0,
@@ -125,10 +148,11 @@ export const getMemberList = cache(async () => {
                 status: !m.isActive
                     ? "SUSPENDED"
                     : !planDetails
-                        ? "NO_PLAN"
-                        : planDetails.status,
+                      ? "NO_PLAN"
+                      : planDetails.status,
             };
         });
+        console.info("records", members);
 
         return {
             stats,

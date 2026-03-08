@@ -1,5 +1,6 @@
 import NewMemberForm from "@/features/members/components/form/member-form";
-import { getPlansList, getTrainersList } from "@/features/members/new/queries";
+import { getPlansList } from "@/features/members/new/queries";
+import { getTrainersList } from "@/features/staff/staff-queries";
 
 import { Metadata } from "next";
 

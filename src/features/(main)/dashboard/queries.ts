@@ -2,15 +2,15 @@
 
 import { auth } from "@/shared/config/auth.config";
 import prisma from "@/shared/config/prisma.config";
-import { currentMember } from "@/shared/lib/session";
+import { currentUser } from "@/shared/lib/session";
 import { cache } from "react";
 
 export const getUserPendingInvitesList = cache(async () => {
     try {
-        const currentUser = await currentMember();
+        const { user } = await currentUser();
         return await auth.api.listUserInvitations({
             query: {
-                email: currentUser?.user.email,
+                email: user.email,
             },
         });
     } catch (error) {
@@ -20,10 +20,10 @@ export const getUserPendingInvitesList = cache(async () => {
 });
 export const getUserJoinedGymList = cache(async () => {
     try {
-        const currentUser = await currentMember();
+        const { user } = await currentUser();
         return await prisma.gymMember.findMany({
             where: {
-                userId: currentUser?.userId,
+                userId: user?.id,
             },
             select: {
                 id: true,

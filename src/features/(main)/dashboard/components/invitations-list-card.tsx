@@ -26,7 +26,7 @@ const InvitationsListCard = ({
                     </p>
                 </div>
             </div>
-            <div className="mt-4 pl-14">
+            <div className="mt-4 pl-14 ">
                 <InvitationActions invitationId={invitation.id} />
             </div>
         </div>

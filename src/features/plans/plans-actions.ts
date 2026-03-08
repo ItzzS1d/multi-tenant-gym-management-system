@@ -11,6 +11,7 @@ import {
 } from "./plans-validations";
 import { requirePermissionAndReturnUser } from "@/shared/lib/session";
 import prisma from "@/shared/config/prisma.config";
+// getActivePlans action wrapper removed, use API route instead
 import { createAuditLog, getAuditMetadata } from "@/shared/lib/server-utils";
 import { handleActionError } from "@/shared/lib/handle-action-error";
 import { ActionResponse } from "@/shared/lib/action-response";

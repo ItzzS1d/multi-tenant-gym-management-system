@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 const Settings = () => {
-    return <div></div>;
+    return <div>Coming Soon</div>;
 };
 
 export default Settings;

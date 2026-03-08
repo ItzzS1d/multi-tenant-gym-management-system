@@ -28,7 +28,7 @@ export const registerAction = async (
             body: {
                 email,
                 password,
-                callbackURL: `/onboarding`,
+                callbackURL: `/dashboard`,
                 name: `${firstName} ${lastName}`,
                 phone,
             },
@@ -91,7 +91,6 @@ export const loginAction = async ({
             emailUsed: user.email,
             event: "LOGIN_SUCCESS",
             userId: user.id,
-
         });
     } catch (error) {
         createAuthLog({

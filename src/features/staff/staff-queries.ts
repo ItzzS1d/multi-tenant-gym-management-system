@@ -75,7 +75,6 @@ export const getTrainersList = cache(async () => {
                         id: true,
                         name: true,
                         image: true,
-                        createdAt: true,
                     },
                 },
             },

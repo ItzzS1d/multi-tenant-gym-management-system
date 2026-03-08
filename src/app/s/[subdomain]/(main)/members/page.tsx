@@ -1,7 +1,6 @@
 import MembersTable from "@/features/members/directory/components/member-table";
 import { MEMBERS_TABLE_COLUMNS } from "@/features/members/directory/components/member-table-colums";
 import { getMemberList } from "@/features/members/directory/queries";
-import { getPlansList } from "@/features/members/new/queries";
 import { StatsSection } from "@/shared/components/stats/stats-section";
 import { StatsCardsSkeleton } from "@/shared/components/stats/stats-card-skeleton";
 import TableSkeleton from "@/shared/components/table/table-skeleton";
@@ -12,7 +11,8 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
     title: "Members",
-    description: "Manage your gym members, view their status, and add new ones.",
+    description:
+        "Manage your gym members, view their status, and add new ones.",
 };
 
 const MEMBER_STATS_CONFIG = {
@@ -30,9 +30,9 @@ const MEMBER_STATS_CONFIG = {
     },
 };
 
-const Members = () => {
+const Members = async () => {
     const membersPromise = getMemberList();
-    const plansPromise = getPlansList();
+
     return (
         <main className="space-y-5">
             <Suspense fallback={<StatsCardsSkeleton length={3} />}>
@@ -45,8 +45,7 @@ const Members = () => {
             <Suspense fallback={<TableSkeleton />}>
                 <MembersTable
                     columns={MEMBERS_TABLE_COLUMNS}
-                    data={membersPromise.then((res) => res.records)}
-                    plansListPromise={plansPromise}
+                    membersPromise={membersPromise}
                 />
             </Suspense>
         </main>

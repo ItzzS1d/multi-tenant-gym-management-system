@@ -32,12 +32,12 @@ export default function RecentCheckIns({
                                         : "bg-gray-300"
                                         }`}
                                 ></div>
-                                <p className="text-sm font-bold text-gray-900">
+                                <p className="text-sm md:text-base font-semibold text-text-main-light dark:text-text-main-dark">
                                     {isCheckInToday
                                         ? `Today, ${format(checkInDate, "hh:mm a")}`
                                         : format(checkInDate, "MMM d, hh:mm a")}
                                 </p>
-                                <p className="text-xs text-gray-500">
+                                <p className="text-[10px] md:text-xs text-text-sub-light font-medium">
                                     {entry.recordedByName || "General Entry"}
                                 </p>
                             </div>

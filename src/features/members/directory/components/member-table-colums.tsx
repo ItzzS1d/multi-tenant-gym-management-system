@@ -9,9 +9,11 @@ import {
 import { GENDER } from "../../../../../prisma/generated/prisma/enums";
 import { formatCurrency, formatDate } from "@/shared/lib/utils";
 import { Badge } from "@/shared/components/ui/badge";
-import { EllipsisVertical } from "lucide-react";
 import Link from "next/link";
 import { VariantProps } from "class-variance-authority";
+
+import { MemberTableActions } from "./member-table-actions";
+import { Route } from "next";
 
 export type MemberTableColumnProps = Awaited<
     ReturnType<typeof getMemberList>
@@ -34,7 +36,7 @@ export const MEMBERS_TABLE_COLUMNS: ColumnDef<MemberTableColumnProps>[] = [
             return (
                 <Link
                     className="flex items-center gap-3"
-                    href={`/members/${id}`}
+                    href={`/members/${id}` as Route}
                 >
                     <Avatar size="default">
                         <AvatarImage src={image ?? avatarSrc} />
@@ -54,13 +56,44 @@ export const MEMBERS_TABLE_COLUMNS: ColumnDef<MemberTableColumnProps>[] = [
         accessorKey: "status",
         header: "STATUS",
         enableGlobalFilter: true,
+        filterFn: (row, filterValue) => {
+            if (!filterValue || filterValue === "all") return true;
+            const status = row.original.status;
+            const daysLeft = row.original.daysLeft;
+
+            if (filterValue === "active") return status === "ACTIVE";
+            if (filterValue === "expiring")
+                return daysLeft !== null && daysLeft <= 7 && daysLeft > 0;
+            if (filterValue === "expired")
+                return (
+                    status === "EXPIRED" || (daysLeft !== null && daysLeft <= 0)
+                );
+
+            return true;
+        },
         cell({ row }) {
-            const { status } = row.original;
-            console.log(row.original);
+            const { status, daysLeft } = row.original;
+            const isExpiringSoon =
+                daysLeft !== null && daysLeft <= 7 && daysLeft > 0;
+
             return (
-                <Badge variant={status.toLowerCase()}>
-                    {status.substring(0, 1) + status.substring(1).toLowerCase()}
-                </Badge>
+                <div className="flex flex-col gap-1">
+                    <Badge
+                        variant={
+                            status.toLowerCase() as VariantProps<
+                                typeof Badge
+                            >["variant"]
+                        }
+                    >
+                        {status.substring(0, 1) +
+                            status.substring(1).toLowerCase().replace("_", " ")}
+                    </Badge>
+                    {isExpiringSoon && (
+                        <span className="text-[10px] text-orange-500 font-medium animate-pulse">
+                            Expiring in {daysLeft} days
+                        </span>
+                    )}
+                </div>
             );
         },
     },
@@ -106,7 +139,7 @@ export const MEMBERS_TABLE_COLUMNS: ColumnDef<MemberTableColumnProps>[] = [
         },
     },
     {
-        accessorKey: "assignedTrainer",
+        accessorKey: "assignedTrainerName",
         header: "ASSIGNED TRAINER",
         enableGlobalFilter: true,
         cell({ getValue }) {
@@ -122,8 +155,8 @@ export const MEMBERS_TABLE_COLUMNS: ColumnDef<MemberTableColumnProps>[] = [
         id: "actions",
         enableGlobalFilter: false,
         header: "ACTIONS",
-        cell({ getValue }) {
-            return <EllipsisVertical className="text-sm text-gray-500" />;
+        cell({ row }) {
+            return <MemberTableActions member={row.original} />;
         },
     },
 ];

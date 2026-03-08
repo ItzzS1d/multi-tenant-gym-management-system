@@ -1,14 +1,17 @@
+import Image from "next/image";
+
 interface HeroSectionProps {
     title: string;
     description: string;
-    img?: string
+    img?: string;
 }
 export const HeroSection = ({ title, description, img }: HeroSectionProps) => {
+    const imageSrc = img || "/register-hero-section.avif";
     return (
         <section
             className="hidden lg:flex lg:w-1/2 relative h-full bg-cover bg-center overflow-hidden bg-gray-900"
             style={{
-                backgroundImage: img ? `url(${img})` : "url('/register-hero-section.avif')",
+                backgroundImage: `url(${imageSrc})`,
             }}
         >
             <div className="absolute inset-0 bg-gradient-to-br from-brand-dark/40 via-brand-dark/30 to-transparent"></div>

@@ -1,5 +1,6 @@
 import { Metadata } from "next";
-import React from "react";
+import { RedirectType } from "next/navigation";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
     title: "Attendance",
@@ -7,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 const Attendance = () => {
-    return <main></main>;
+    redirect("/attendance/records", RedirectType.replace);
 };
 
 export default Attendance;

@@ -17,7 +17,7 @@ const InvitationActions = ({ invitationId }: { invitationId: string }) => {
     };
 
     return (
-        <div>
+        <div className="flex items-center gap-2">
             <Button
                 variant={"outline"}
                 disabled={loading}

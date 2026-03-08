@@ -266,34 +266,6 @@ export const getPlansList = cache(async () => {
     }
 });
 
-export const getTrainersList = cache(async () => {
-    try {
-        const currentStaff = await requirePermissionAndReturnUser("staff", [
-            "read",
-        ]);
-        return await prisma.gymMember.findMany({
-            where: {
-                gymId: currentStaff.organizationId,
-                isActive: true,
-                role: "trainer",
-            },
-            select: {
-                id: true,
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        image: true,
-                    },
-                },
-            },
-        });
-    } catch (error) {
-        console.error(error);
-        throw error;
-    }
-});
-
 export const getMemberActivePlanDetails = cache(async (memberId: string) => {
     try {
         const currentStaff = await requirePermissionAndReturnUser("member", [

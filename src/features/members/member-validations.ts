@@ -34,12 +34,12 @@ export const createMemberSchema = userSchema
         paymentMethod: z.enum(PAYMENT_METHOD, {
             error: "Please select a payment method",
         }),
-        amountPaid: z
-            .coerce.number({ error: "Invalid amount paid" })
+        amountPaid: z.coerce
+            .number({ error: "Invalid amount paid" })
             .min(0)
             .max(50000),
-        discount: z
-            .coerce.number({ error: "Invalid discount" })
+        discount: z.coerce
+            .number({ error: "Invalid discount" })
             .min(0)
             .max(5000)
             .nullable()
@@ -87,5 +87,70 @@ export const createMemberSchema = userSchema
         }
     });
 
+export const renewMemberSchema = z.object({
+    memberId: z.cuid({ error: "Invalid member ID" }),
+    membershipPlanId: z.cuid({ error: "Please select a membership plan" }),
+    startDate: z.date({ error: "Start date is required" }),
+    paymentMethod: z.enum(PAYMENT_METHOD, {
+        error: "Please select a payment method",
+    }),
+    amountPaid: z.coerce.number({ error: "Invalid amount paid" }).min(0),
+    paymentNotes: z.string().optional(),
+});
+
+export const updateMemberSchema = userSchema
+    .omit({
+        password: true,
+        id: true,
+        startDate: true,
+    })
+    .extend({
+        assignedTrainerId: z
+            .cuid({ error: "Invalid trainer selected" })
+            .nullable()
+            .optional(),
+        image: z.any().optional(),
+    })
+    .superRefine((data, ctx) => {
+        if (data.emergencyPhone === data.phone) {
+            ctx.addIssue({
+                code: "custom",
+                message:
+                    "Emergency phone number cannot be the same as member phone number",
+                path: ["emergencyPhone"],
+            });
+        }
+
+        if (data.image instanceof File) {
+            if (data.image.size > MAX_FILE_SIZE) {
+                ctx.addIssue({
+                    code: "custom",
+                    message: `Max file size is ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+                    path: ["image"],
+                });
+            }
+            if (!ACCEPTED_IMAGE_MIME_TYPES.includes(data.image.type)) {
+                ctx.addIssue({
+                    code: "custom",
+                    message: ".jpg, .jpeg, .png and .webp files are accepted",
+                    path: ["image"],
+                });
+            }
+        }
+    });
+
+export const assignedTrainerSchema = z.object({
+    assignedTrainerId: z.cuid({ error: "Invalid trainer selected" })
+});
+
+export const assignTrainerSchema = z.object({
+    memberId: z.cuid({ error: "Invalid member ID" }),
+    trainerId: z.cuid({ error: "Invalid trainer selected" }),
+});
+
 export type StaffNotes = z.infer<typeof staffNotesSchema>;
 export type CreateMember = z.infer<typeof createMemberSchema>;
+export type RenewMember = z.infer<typeof renewMemberSchema>;
+export type UpdateMember = z.infer<typeof updateMemberSchema>;
+export type AssignedTrainerSchema = z.infer<typeof assignedTrainerSchema>;
+export type AssignTrainer = z.infer<typeof assignTrainerSchema>;

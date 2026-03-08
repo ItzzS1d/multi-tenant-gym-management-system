@@ -18,19 +18,23 @@ const badgeVariants = cva(
                     "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
                 ghost: "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
                 link: "text-primary underline-offset-4 hover:underline",
-                active: "px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary/20 text-green-800 dark:text-green-300 border border-primary/30",
+                active: "px-2.5 py-0.5 inline-flex text-[10px] md:text-xs leading-5 font-bold rounded-full bg-primary/20 text-emerald-900 dark:text-primary border-primary/20 border uppercase tracking-wide",
                 pending:
-                    "px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800",
+                    "px-2.5 py-0.5 inline-flex text-[10px] md:text-xs leading-5 font-bold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800 uppercase tracking-wide",
                 inactive:
-                    "px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border border-red-200 ",
+                    "px-2.5 py-0.5 inline-flex text-[10px] md:text-xs leading-5 font-bold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border border-red-200 uppercase tracking-wide",
                 rejected:
-                    "bg-destructive/10 [a]:hover:bg-destructive/20 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 text-destructive dark:bg-destructive/20",
+                    "bg-destructive/10 [a]:hover:bg-destructive/20 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 text-destructive dark:bg-destructive/20 uppercase tracking-wide",
                 accepted:
-                    "px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary/20 text-green-800 dark:text-green-300 border border-primary/30",
+                    "px-2.5 py-0.5 inline-flex text-[10px] md:text-xs leading-5 font-bold rounded-full bg-primary/20 text-emerald-900 dark:text-primary border-primary/20 border uppercase tracking-wide",
                 expired:
-                    "px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300 border border-gray-200 dark:border-gray-800",
+                    "px-2.5 py-0.5 inline-flex text-[10px] md:text-xs leading-5 font-bold rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 border border-orange-200 dark:border-orange-800 uppercase tracking-wide",
                 revoked:
-                    "px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border border-red-200 ",
+                    "px-2.5 py-0.5 inline-flex text-[10px] md:text-xs leading-5 font-bold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border border-red-200 uppercase tracking-wide",
+                no_plan:
+                    "px-2.5 py-0.5 inline-flex text-[10px] md:text-xs leading-5 font-bold rounded-full bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-300 border border-gray-200 dark:border-gray-800 uppercase tracking-wide",
+                suspended:
+                    "px-2.5 py-0.5 inline-flex text-[10px] md:text-xs leading-5 font-bold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border border-red-200 uppercase tracking-wide",
             },
         },
         defaultVariants: {

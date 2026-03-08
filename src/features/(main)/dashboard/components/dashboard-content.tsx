@@ -134,7 +134,7 @@ export default function DashboardContent({
                     {!isOwner && (
                         <div className="p-5 rounded-xl bg-linear-to-br from-primary/10 via-primary/5 to-background border border-primary/20 space-y-4">
                             <div className="space-y-2">
-                                <h3 className="font-semibold text-primary">
+                                <h3 className="font-semibold text-primary text-lg">
                                     Own a gym?
                                 </h3>
                                 <p className="text-sm text-muted-foreground">
@@ -142,9 +142,12 @@ export default function DashboardContent({
                                     attendance, and payments.
                                 </p>
                             </div>
-                            <Link href="/onboarding" className="w-full block">
-                                Create Workspace{" "}
-                                <ArrowRight className="ml-2 h-4 w-4" />
+                            <Link
+                                href="/onboarding"
+                                className="w-full  flex items-center group"
+                            >
+                                Create Gym
+                                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
                             </Link>
                         </div>
                     )}

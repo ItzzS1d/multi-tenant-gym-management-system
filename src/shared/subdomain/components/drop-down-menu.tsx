@@ -120,7 +120,7 @@ const DropDownMenuContent = ({
                         {isLoading ? <Spinner /> : <LogOut />}
                         <span>Sign Out</span>
                     </DropdownMenuItem>
-                    {/*<DropdownMenuGroup className="space-y-1.5">
+                    <DropdownMenuGroup className="space-y-1.5">
                         <DropdownMenuLabel>My account</DropdownMenuLabel>
                         <DropdownMenuItem
                             onClick={() => {
@@ -141,7 +141,7 @@ const DropDownMenuContent = ({
                     >
                         {isLoading ? <Spinner /> : <LogOut />}
                         <span>Sign Out</span>
-                    </DropdownMenuItem>*/}
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>{" "}
         </>

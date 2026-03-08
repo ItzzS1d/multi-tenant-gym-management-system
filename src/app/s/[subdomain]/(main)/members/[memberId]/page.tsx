@@ -17,6 +17,7 @@ import OverViewTab from "@/features/members/components/overview/overview-tab";
 import AttendanceTab from "@/features/members/components/attendance/attendace-tab";
 import BillingTab from "@/features/members/components/billing/billing-tab";
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 const tabs = [
     {
         label: "Overview",
@@ -34,9 +35,6 @@ const tabs = [
         icon: ReceiptText,
     },
 ] as const;
-
-import { Metadata } from "next";
-import Link from "next/link";
 
 export async function generateMetadata({
     params,
@@ -69,6 +67,7 @@ const MemberPage = async ({
 
     const memberOverviewPromise = getMemberOverViewDetails(memberId);
     const memberNotesPromise = getMemberNotes(memberId);
+
     return (
         <main>
             <Suspense fallback={<ProfileHeaderCardSkeleton />}>

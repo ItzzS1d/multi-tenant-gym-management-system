@@ -213,8 +213,8 @@ input[type="number"] {
 }
 
 /* Remove FullCalendar section borders */
-.fc .fc-scrollgrid-section>td,
-.fc .fc-scrollgrid-section>th {
+.fc .fc-scrollgrid-section > td,
+.fc .fc-scrollgrid-section > th {
     border: none;
 }
 
@@ -277,4 +277,8 @@ input[type="number"] {
 /* Absent day cells — full red inset border */
 .fc .fc-bg-event[style*="fef2f2"] {
     box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 1);
+}
+::selection {
+    background-color: #16eb5a;
+    color: white;
 }

@@ -1,4 +1,5 @@
 "use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { loginSchema } from "../validations/client-validation";
@@ -123,30 +124,6 @@ const LoginForm = (props: LoginFormProps) => {
                     )}
                 </Button>
             </form>
-
-            <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-100"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-white text-gray-400 ">
-                        Or continue with
-                    </span>
-                </div>
-            </div>
-
-            {/* Footer */}
-            <div className="text-center space-y-6">
-                <p className="text-sm  text-muted-foreground">
-                    Don&apos;t have an account?{" "}
-                    <Link
-                        href="/register"
-                        className="text-primary font-medium hover:text-brand-primary transition-colors hover:underline"
-                    >
-                        Register
-                    </Link>
-                </p>
-            </div>
         </div>
     );
 };

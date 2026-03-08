@@ -87,7 +87,7 @@ const StaffNotes = ({
     }, [optimisticNotes.length]);
 
     return (
-        <section className=" lg:col-span-3  dark:bg-surface-dark rounded-xl p-5 shadow-lg border border-[#e7f3eb] dark:border-[#2a4034]">
+        <section id="staff-notes" className=" lg:col-span-3  dark:bg-surface-dark rounded-xl p-5 shadow-lg border border-[#e7f3eb] dark:border-[#2a4034]">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-text-main-light dark:text-text-main-dark flex items-center gap-2">
                     <span className="text-primary">
@@ -124,16 +124,14 @@ const StaffNotes = ({
                         <div key={note.id}>
                             <div className="bg-[#f8fcf9] dark:bg-[#102216] p-3 rounded-lg border border-[#e7f3eb] dark:border-[#2a4034]">
                                 <div className="flex justify-between items-center mb-1">
-                                    <p className="text-s font-medium text-text-main-light dark:text-text-main-dark">
+                                    <p className="text-sm font-semibold text-text-main-light dark:text-text-main-dark">
                                         {note.staff?.user?.name}
                                     </p>
-                                    <p className="text-[12px] text-text-sub-light">
-                                        <span>
-                                            {formatDate(note.createdAt)}
-                                        </span>
+                                    <p className="text-[10px] md:text-xs text-text-sub-light font-medium">
+                                        {formatDate(note.createdAt)}
                                     </p>
                                 </div>
-                                <p className="text-sm text-text-main-light dark:text-text-main-dark">
+                                <p className="text-sm md:text-base text-text-main-light dark:text-text-main-dark font-medium leading-relaxed">
                                     {note.content}
                                 </p>
                             </div>
